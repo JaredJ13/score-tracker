@@ -17,11 +17,11 @@ export default function BottomAppBar() {
         >
           <BottomNavigationAction
             label="Recents"
-            icon={<ScoreboardTwoToneIcon sx={{ width: 70, height: 68 }} />}
+            icon={<ScoreboardTwoToneIcon sx={{ width: 30, height: 30 }} />}
           />
           <BottomNavigationAction
             label="Favorites"
-            icon={<AccountBoxTwoToneIcon sx={{ width: 70, height: 65 }} />}
+            icon={<AccountBoxTwoToneIcon sx={{ width: 30, height: 30 }} />}
           />
         </BottomNavigation>
       </Box>

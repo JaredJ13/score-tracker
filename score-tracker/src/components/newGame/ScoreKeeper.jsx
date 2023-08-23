@@ -1,34 +1,24 @@
-import { Box } from "@mui/material";
-import { VictoryBar, VictoryChart, VictoryAxis } from "victory";
+import { BarChart } from "@mui/x-charts";
 
 export default function ScoreKeeper() {
-  const data = [
-    { quarter: 1, earnings: 13000 },
-    { quarter: 2, earnings: 16500 },
-    { quarter: 3, earnings: 14250 },
-    { quarter: 4, earnings: 19000 },
-  ];
+  const seriesA = {
+    data: [2, 3, 1, 4, 5],
+    label: "series A",
+  };
+  const seriesB = {
+    data: [3, 1, 4, 2, 1],
+    label: "series B",
+  };
   return (
     <>
-      <Box>
-        <VictoryChart domainPadding={20}>
-          <VictoryAxis
-            tickValues={[1, 2, 3, 4]}
-            tickFormat={["Quarter 1", "Quarter 2", "Quarter 3", "Quarter 4"]}
-          ></VictoryAxis>
-          <VictoryAxis
-            dependentAxis
-            // tickFormat specifies how ticks should be displayed
-            tickFormat={(x) => `$${x / 1000}k`}
-          />
-          <VictoryBar
-            data={data} // data accessor for x values
-            x="quarter"
-            // data accessor for y values
-            y="earnings"
-          />
-        </VictoryChart>
-      </Box>
+      <BarChart
+        width={300}
+        height={500}
+        series={[
+          { ...seriesA, stack: "total" },
+          { ...seriesB, stack: "total" },
+        ]}
+      />
     </>
   );
 }
