@@ -1,0 +1,48 @@
+
+/* reset styles */
+
+html {
+  /* 
+  16px / 10 = 0.625 x 100 = 62.5%.
+  16px = 1.6rem
+  */
+  font-size: 62.5%; 
+  /* the new browser default font size */
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.6rem;
+  min-height: 100%;
+  line-height: 1.5;
+  scroll-behavior: smooth;
+  text-rendering: optimizeSpeed;
+}
+
+body,
+h1, h2, h3, h4, h5, h6,
+p, ul, ol, li {
+  margin: 0;
+  padding: 0;
+}
+
+ul, ol {
+  list-style-type: none;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  text-decoration: none;
+}
+
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
