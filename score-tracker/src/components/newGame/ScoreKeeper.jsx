@@ -1,3 +1,4 @@
+import { Grid } from "@mui/material";
 import { BarChart } from "@mui/x-charts";
 
 export default function ScoreKeeper() {
@@ -11,14 +12,18 @@ export default function ScoreKeeper() {
   };
   return (
     <>
-      <BarChart
-        width={300}
-        height={500}
-        series={[
-          { ...seriesA, stack: "total" },
-          { ...seriesB, stack: "total" },
-        ]}
-      />
+      <Grid container justifyContent="center" alignItems="flex-end">
+        <Grid item>
+          <BarChart
+            width={300}
+            height={500}
+            series={[
+              { ...seriesA, stack: "total" },
+              { ...seriesB, stack: "total" },
+            ]}
+          />
+        </Grid>
+      </Grid>
     </>
   );
 }
