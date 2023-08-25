@@ -1,12 +1,14 @@
 import NewGame from "./pages/NewGame"
+import Layout from "./components/global/Layout";
 
 function App() {
-
   return (
     <>
-      <NewGame/>
+      <Layout>
+        <NewGame />
+      </Layout>
     </>
-  )
+  );
 }
 
 export default App
