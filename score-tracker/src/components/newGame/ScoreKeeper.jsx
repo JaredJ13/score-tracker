@@ -18,25 +18,27 @@ import { Chart } from "react-google-charts";
 import AddIcon from "@mui/icons-material/Add";
 
 export default function ScoreKeeper() {
-  // const [scores, setScores] = useState([]);
   const [teams, setTeams] = useState([]);
+  const [scores, setScores] = useState([]);
+  const [seed, setSeed] = useState(0);
+
+  const [chartData, setChartData] = useState([["Teams", "Scores"]]);
 
   // input state
   const [addTeamName, setAddTeamName] = useState("");
+  const [scoreInput, setScoreInput] = useState(0);
 
   // modal state
   const [addTeamModalOpen, setAddTeamModalOpen] = useState(false);
 
-  const chartData = [
-    ["Team", "Score", { role: "style" }],
-    ["Team Roxanne", 97, "#5a5ce9"],
-    ["Team Shaun", 56, "#a488f0"],
-  ];
   const options = {
     // title: "",
     // hAxis: { title: "Teams" },
     // vAxis: { title: "Score" },
     legend: "none",
+    vAxis: {
+      viewWindow: { max: 150 },
+    },
   };
 
   const handleAddTeamModal = () => {
@@ -44,23 +46,42 @@ export default function ScoreKeeper() {
   };
 
   const handleAddNewTeam = () => {
+    let newTeamName = addTeamName;
+    setChartData([...chartData, [newTeamName, 0]]);
     setTeams([...teams, addTeamName]);
+    setSeed(seed + 1);
   };
 
-  useEffect(() => {
-    console.log(teams);
-  }, [teams]);
+  const handleAddPoints = (team, index) => {
+    let chartDataArray = chartData;
+    let scoreIndex = chartDataArray.findIndex(
+      (element) => element[0] === teams[index]
+    );
+    chartDataArray.splice(scoreIndex, 1, [team, Number(scoreInput)]);
+    setChartData(chartDataArray);
+    setScoreInput(0);
+  };
 
   return (
     <>
       <Container>
-        <Chart
-          options={options}
-          chartType="ColumnChart"
-          width="100%"
-          height="300px"
-          data={chartData}
-        />
+        {teams.length >= 1 && teams.length !== undefined ? (
+          <Chart
+            options={options}
+            chartType="ColumnChart"
+            width="100%"
+            height="300px"
+            data={chartData}
+            key={seed}
+          />
+        ) : (
+          <Grid item>
+            <Typography variant="h5" color="secondary" align="center" my={10}>
+              To start tracking your matche{"'"}s scores, add your teams below.
+            </Typography>
+          </Grid>
+        )}
+
         <Grid container justifyContent="center" rowSpacing={2}>
           <Grid item>
             <Button
@@ -93,7 +114,7 @@ export default function ScoreKeeper() {
           </Dialog>
 
           {teams.length >= 1 && teams.length !== undefined ? (
-            teams.map((team) => {
+            teams.map((team, index) => {
               return (
                 <Grid
                   item
@@ -110,10 +131,14 @@ export default function ScoreKeeper() {
                       variant="outlined"
                       fullWidth
                       type="number"
+                      onChange={(e) => setScoreInput(e.target.value)}
                     />
                   </Grid>
                   <Grid item>
-                    <IconButton aria-label="add-score">
+                    <IconButton
+                      aria-label="add-score"
+                      onClick={() => handleAddPoints(team, index)}
+                    >
                       <AddIcon />
                     </IconButton>
                   </Grid>
