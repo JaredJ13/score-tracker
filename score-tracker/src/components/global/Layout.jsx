@@ -16,12 +16,12 @@ export default function Layout({ children }) {
         >
           <Toolbar>
             <Typography
-              variant="h2"
+              variant="h5"
               component="h1"
               align="center"
               sx={{ margin: "0 auto" }}
             >
-              Score Tracker
+              Nerts Score Tracker
             </Typography>
           </Toolbar>
         </AppBar>
