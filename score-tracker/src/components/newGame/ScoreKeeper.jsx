@@ -47,6 +47,10 @@ export default function ScoreKeeper() {
       viewWindow: { max: 150 },
     },
     colors: ["#f77d1a"],
+    animation: {
+      duration: 1000,
+      easing: "out",
+    },
   };
 
   const handleAddTeamModal = () => {
