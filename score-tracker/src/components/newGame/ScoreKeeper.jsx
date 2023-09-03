@@ -16,7 +16,9 @@ import {
   Paper,
   Card,
   CardContent,
+  Snackbar,
 } from "@mui/material";
+import MuiAlert from "@mui/material/Alert";
 import { Chart } from "react-google-charts";
 
 // icon imports
@@ -35,8 +37,9 @@ export default function ScoreKeeper() {
   const [addTeam2Name, setAddTeam2Name] = useState("");
   const [scoreInput, setScoreInput] = useState(0);
 
-  // modal state
+  // modal/snackbar state
   const [addTeamModalOpen, setAddTeamModalOpen] = useState(false);
+  const [snackBarWarning, setSnackBarWarning] = useState(false);
 
   const options = {
     // title: "",
@@ -55,6 +58,10 @@ export default function ScoreKeeper() {
 
   const handleAddTeamModal = () => {
     setAddTeamModalOpen(!addTeamModalOpen);
+  };
+
+  const handleSnackBarWarning = () => {
+    setSnackBarWarning(!snackBarWarning);
   };
 
   const handleAddNewTeam = () => {
@@ -111,6 +118,7 @@ export default function ScoreKeeper() {
       // set score input state again to update google chart
       setScoreInput(0);
     } else {
+      handleSnackBarWarning();
       console.log("Team already added score this round");
     }
   };
@@ -237,7 +245,21 @@ export default function ScoreKeeper() {
                 </Button>
               </DialogActions>
             </Dialog>
-
+            <Snackbar
+              open={snackBarWarning}
+              autoHideDuration={5000}
+              onClose={handleSnackBarWarning}
+            >
+              <MuiAlert
+                onClose={handleSnackBarWarning}
+                severity="warning"
+                variant="filled"
+                elevation={6}
+                sx={{ width: "100%" }}
+              >
+                {`You${"'"}ve already entered a score for this team this round.`}
+              </MuiAlert>
+            </Snackbar>
             {teams.length >= 1 && teams.length !== undefined ? (
               teams.map((team, index) => {
                 return (
