@@ -36,6 +36,7 @@ export default function ScoreKeeper() {
   const [addTeam1Name, setAddTeam1Name] = useState("");
   const [addTeam2Name, setAddTeam2Name] = useState("");
   const [scoreInput, setScoreInput] = useState(0);
+  const [scoreInput2, setScoreInput2] = useState(0);
 
   // modal/snackbar state
   const [addTeamModalOpen, setAddTeamModalOpen] = useState(false);
@@ -94,15 +95,19 @@ export default function ScoreKeeper() {
             newScoreTotal += score.scoreUpdate;
           }
         });
-        newScoreTotal += parseInt(scoreInput);
+        newScoreTotal +=
+          index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
       } else {
-        newScoreTotal = parseInt(scoreInput);
+        newScoreTotal =
+          index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
       }
+
       setScoreHistory([
         ...scoreHistory,
         {
           team: team,
-          scoreUpdate: parseInt(scoreInput),
+          scoreUpdate:
+            index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
           scoreEntry: scoreItemNum,
           teamScoreTotal: newScoreTotal,
           round: currentRound,
@@ -117,9 +122,11 @@ export default function ScoreKeeper() {
       setChartData(chartDataArray);
       // set score input state again to update google chart
       setScoreInput(0);
+      setScoreInput2(0);
     } else {
       handleSnackBarWarning();
-      console.log("Team already added score this round");
+      setScoreInput(0);
+      setScoreInput2(0);
     }
   };
 
@@ -262,36 +269,69 @@ export default function ScoreKeeper() {
             </Snackbar>
             {teams.length >= 1 && teams.length !== undefined ? (
               teams.map((team, index) => {
-                return (
-                  <Grid
-                    item
-                    container
-                    xs={12}
-                    justifyContent="center"
-                    alignItems="center"
-                    key={index}
-                  >
-                    <Grid item xs={6}>
-                      <TextField
-                        id="outlined-basic"
-                        label={team}
-                        defaultValue={0}
-                        variant="outlined"
-                        fullWidth
-                        type="number"
-                        onChange={(e) => setScoreInput(e.target.value)}
-                      />
+                if (index === 0) {
+                  return (
+                    <Grid
+                      item
+                      container
+                      xs={12}
+                      justifyContent="center"
+                      alignItems="center"
+                      key={index}
+                    >
+                      <Grid item xs={6}>
+                        <TextField
+                          id="outlined-basic"
+                          label={team}
+                          variant="outlined"
+                          fullWidth
+                          type="number"
+                          value={scoreInput}
+                          onChange={(e) => setScoreInput(e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item>
+                        <IconButton
+                          aria-label="add-score"
+                          onClick={() => handleAddPoints(team, index)}
+                        >
+                          <AddIcon />
+                        </IconButton>
+                      </Grid>
                     </Grid>
-                    <Grid item>
-                      <IconButton
-                        aria-label="add-score"
-                        onClick={() => handleAddPoints(team, index)}
-                      >
-                        <AddIcon />
-                      </IconButton>
+                  );
+                } else if (index === 1) {
+                  return (
+                    <Grid
+                      item
+                      container
+                      xs={12}
+                      justifyContent="center"
+                      alignItems="center"
+                      key={index}
+                    >
+                      <Grid item xs={6}>
+                        <TextField
+                          id="outlined-basic"
+                          label={team}
+                          variant="outlined"
+                          fullWidth
+                          type="number"
+                          value={scoreInput2}
+                          onChange={(e) => setScoreInput2(e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item>
+                        <IconButton
+                          aria-label="add-score"
+                          onClick={() => handleAddPoints(team, index)}
+                        >
+                          <AddIcon />
+                        </IconButton>
+                      </Grid>
                     </Grid>
-                  </Grid>
-                );
+                  );
+                }
               })
             ) : (
               <Grid
