@@ -1,32 +1,53 @@
+/* eslint-disable react/prop-types */
 import AppBar from "@mui/material/AppBar";
 import { Toolbar, Typography } from "@mui/material";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 
-// icons
-
-// styled components
+// themes
+const lightTheme = createTheme({
+  palette: {
+    mode: "light",
+    primary: {
+      main: "#7581c5",
+    },
+    secondary: {
+      main: "#f77d1a",
+    },
+    success: {
+      main: "#58ec4f",
+    },
+    info: {
+      main: "#96aaf9",
+    },
+    warning: {
+      main: "#ed6c02",
+    },
+    error: {
+      main: "#d32f2f",
+    },
+  },
+});
 
 export default function Layout({ children }) {
   return (
     <>
-      <div className="layout-container">
-        <AppBar
-          position="sticky"
-          color="default"
-          sx={{ top: "auto", bottom: 0 }}
-        >
-          <Toolbar>
-            <Typography
-              variant="h5"
-              component="h1"
-              align="center"
-              sx={{ margin: "0 auto" }}
-            >
-              Nerts Score Tracker
-            </Typography>
-          </Toolbar>
-        </AppBar>
-        {children}
-      </div>
+      <ThemeProvider theme={lightTheme}>
+        <div className="layout-container">
+          <AppBar color="primary" sx={{ top: "auto", bottom: 0, height: 40 }}>
+            <Toolbar>
+              <Typography
+                variant="h5"
+                component="h1"
+                align="center"
+                sx={{ margin: "0 auto" }}
+              >
+                Nerts Score Tracker
+              </Typography>
+            </Toolbar>
+          </AppBar>
+          {children}
+        </div>
+      </ThemeProvider>
     </>
   );
 }

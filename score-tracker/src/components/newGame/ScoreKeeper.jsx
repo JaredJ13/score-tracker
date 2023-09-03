@@ -46,6 +46,7 @@ export default function ScoreKeeper() {
     vAxis: {
       viewWindow: { max: 150 },
     },
+    colors: ["#f77d1a"],
   };
 
   const handleAddTeamModal = () => {
@@ -136,7 +137,7 @@ export default function ScoreKeeper() {
 
   return (
     <>
-      <Container>
+      <Container sx={{ mb: 4 }}>
         {teams.length >= 1 && teams.length !== undefined ? (
           <>
             <Chart
@@ -148,7 +149,11 @@ export default function ScoreKeeper() {
             />
             <Grid container justifyContent="space-around">
               <Grid item>
-                <Chip label={`Round: ${currentRound}`} color="primary" />
+                <Chip
+                  label={`Round: ${currentRound}`}
+                  color="info"
+                  sx={{ color: "#fff" }}
+                />
               </Grid>
               {teams.map((team) => {
                 let scoreHistoryIndex = scoreHistory.findIndex(
@@ -167,7 +172,8 @@ export default function ScoreKeeper() {
                           ? `${team}'s Score: ${scoreHistory[scoreHistoryIndex].teamScoreTotal}`
                           : `${team}'s Score: 0`
                       }
-                      color="default"
+                      color="secondary"
+                      sx={{ color: "#fff" }}
                     />
                   </Grid>
                 );
@@ -177,13 +183,14 @@ export default function ScoreKeeper() {
         ) : (
           <Grid item></Grid>
         )}
+        <Divider sx={{ mt: 4 }}>Enter Scores</Divider>
         <Paper sx={{ my: 4, pb: 4 }} square>
           <Grid container justifyContent="center" rowSpacing={2}>
             {teams.length === 0 || teams.length === undefined ? (
               <Grid item>
                 <Button
                   variant="text"
-                  color="success"
+                  color="secondary"
                   size="small"
                   onClick={handleAddTeamModal}
                 >
