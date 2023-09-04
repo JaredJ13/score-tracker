@@ -17,12 +17,16 @@ import {
   Card,
   CardContent,
   Snackbar,
+  CircularProgress,
+  DialogContentText,
 } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import { Chart } from "react-google-charts";
 
 // icon imports
 import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import StarRateIcon from "@mui/icons-material/StarRate";
 
 export default function ScoreKeeper() {
   const [teams, setTeams] = useState([]);
@@ -31,16 +35,25 @@ export default function ScoreKeeper() {
   const [chartData, setChartData] = useState([["Team", "Score"]]);
   const [startMatchButtonDisabled, setStartMatchButtonDisabled] =
     useState(true);
+  const [editScoreMode, setEditScoreMode] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
   const [addTeam2Name, setAddTeam2Name] = useState("");
   const [scoreInput, setScoreInput] = useState(0);
   const [scoreInput2, setScoreInput2] = useState(0);
+  const [editScoreInput, setEditScoreInput] = useState(0);
 
   // modal/snackbar state
   const [addTeamModalOpen, setAddTeamModalOpen] = useState(false);
   const [snackBarWarning, setSnackBarWarning] = useState(false);
+  const [editScoreModalOpen, setEditScoreModalOpen] = useState(false);
+  const [editScoreData, setEditScoreData] = useState(null);
+
+  useEffect(() => {
+    console.log("editscoredata", editScoreData);
+  }, [editScoreData]);
 
   const options = {
     // title: "",
@@ -59,6 +72,11 @@ export default function ScoreKeeper() {
 
   const handleAddTeamModal = () => {
     setAddTeamModalOpen(!addTeamModalOpen);
+  };
+
+  const handleEditScoreModal = (scoreData) => {
+    setEditScoreData(scoreData);
+    setEditScoreModalOpen(!editScoreModalOpen);
   };
 
   const handleSnackBarWarning = () => {
@@ -106,6 +124,7 @@ export default function ScoreKeeper() {
         ...scoreHistory,
         {
           team: team,
+          teamIndex: index,
           scoreUpdate:
             index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
           scoreEntry: scoreItemNum,
@@ -130,7 +149,82 @@ export default function ScoreKeeper() {
     }
   };
 
+  const handleEditScore = () => {
+    setLoading(true);
+    // splice in updated score to score history
+    let updatedScoreData = editScoreData;
+    updatedScoreData.teamScoreTotal =
+      updatedScoreData.teamScoreTotal -
+      updatedScoreData.scoreUpdate +
+      Number(editScoreInput);
+    updatedScoreData.scoreUpdate = Number(editScoreInput);
+
+    let scoreHistoryArray = [...scoreHistory];
+    scoreHistoryArray.splice(updatedScoreData.scoreEntry, 1, updatedScoreData);
+
+    // update all future round scores for team based on new teamScoreTotal
+    scoreHistoryArray.map((score, index) => {
+      if (
+        score.team === updatedScoreData.team &&
+        score.round > updatedScoreData.round
+      ) {
+        // get teamScoreTotal from previous score entry for this team
+        let previousTeamScoreIndex = scoreHistoryArray.findIndex(
+          (x) => x.round === score.round - 1 && x.team === score.team
+        );
+        let previousTeamScoreTotal =
+          scoreHistoryArray[previousTeamScoreIndex].teamScoreTotal;
+
+        // set current map index's new teamScoreTotal based on previous one
+        scoreHistoryArray[index].teamScoreTotal =
+          previousTeamScoreTotal + score.scoreUpdate;
+      }
+    });
+    setScoreHistory([...scoreHistoryArray]);
+
+    setEditScoreMode(true);
+  };
+
   useEffect(() => {
+    setTimeout(() => {
+      if (editScoreMode) {
+        let newScoreTotal = 0;
+        // calc new score total when state is updated
+        if (scoreHistory.length > 0 && scoreHistory.length !== undefined) {
+          scoreHistory.map((score) => {
+            if (score.team === editScoreData.team) {
+              newScoreTotal += score.scoreUpdate;
+            }
+          });
+        } else {
+          newScoreTotal = Number(editScoreInput);
+        }
+
+        // input current score into chart data
+        let chartDataArray = chartData;
+        let scoreIndex = chartDataArray.findIndex(
+          (element) => element[0] === teams[editScoreData.teamIndex]
+        );
+        chartDataArray.splice(scoreIndex, 1, [
+          editScoreData.team,
+          newScoreTotal,
+        ]);
+
+        setChartData(chartDataArray);
+        // set score input state again to update google chart
+        setScoreInput(0);
+        setScoreInput2(0);
+
+        setEditScoreMode(false);
+        // close modal
+        setEditScoreModalOpen();
+      }
+      setLoading(false);
+    }, 3000);
+  }, [editScoreMode]);
+
+  useEffect(() => {
+    console.log(scoreHistory);
     // Check if all teams have scored once this round
     let map = new Map();
     for (let i = 0; i < scoreHistory.length; i++) {
@@ -157,51 +251,53 @@ export default function ScoreKeeper() {
   return (
     <>
       <Container sx={{ mb: 4 }}>
-        {teams.length >= 1 && teams.length !== undefined ? (
-          <>
-            <Chart
-              options={options}
-              chartType="ColumnChart"
-              width="100%"
-              height="300px"
-              data={chartData}
-            />
-            <Grid container justifyContent="space-around">
-              <Grid item>
-                <Chip
-                  label={`Round: ${currentRound}`}
-                  color="info"
-                  sx={{ color: "#fff" }}
-                />
-              </Grid>
-              {teams.map((team) => {
-                let scoreHistoryIndex = scoreHistory.findIndex(
-                  (x) => x.team === team && x.round === currentRound
-                );
-                if (scoreHistoryIndex === -1) {
-                  scoreHistoryIndex = scoreHistory.findIndex(
-                    (x) => x.team === team && x.round === currentRound - 1
+        <Paper square sx={{ pb: 4, mt: 3 }}>
+          {teams.length >= 1 && teams.length !== undefined ? (
+            <>
+              <Chart
+                options={options}
+                chartType="ColumnChart"
+                width="100%"
+                height="300px"
+                data={chartData}
+              />
+              <Grid container justifyContent="space-around">
+                <Grid item>
+                  <Chip
+                    label={`Round: ${currentRound}`}
+                    color="info"
+                    sx={{ color: "#fff" }}
+                  />
+                </Grid>
+                {teams.map((team) => {
+                  let scoreHistoryIndex = scoreHistory.findIndex(
+                    (x) => x.team === team && x.round === currentRound
                   );
-                }
-                return (
-                  <Grid item>
-                    <Chip
-                      label={
-                        scoreHistoryIndex !== -1
-                          ? `${team}'s Score: ${scoreHistory[scoreHistoryIndex].teamScoreTotal}`
-                          : `${team}'s Score: 0`
-                      }
-                      color="secondary"
-                      sx={{ color: "#fff" }}
-                    />
-                  </Grid>
-                );
-              })}
-            </Grid>
-          </>
-        ) : (
-          <Grid item></Grid>
-        )}
+                  if (scoreHistoryIndex === -1) {
+                    scoreHistoryIndex = scoreHistory.findIndex(
+                      (x) => x.team === team && x.round === currentRound - 1
+                    );
+                  }
+                  return (
+                    <Grid item>
+                      <Chip
+                        label={
+                          scoreHistoryIndex !== -1
+                            ? `${team}'s Score: ${scoreHistory[scoreHistoryIndex].teamScoreTotal}`
+                            : `${team}'s Score: 0`
+                        }
+                        color="secondary"
+                        sx={{ color: "#fff" }}
+                      />
+                    </Grid>
+                  );
+                })}
+              </Grid>
+            </>
+          ) : (
+            <Grid item></Grid>
+          )}
+        </Paper>
         <Divider sx={{ mt: 4 }}>Enter Scores</Divider>
         <Paper sx={{ my: 4, pb: 4 }} square>
           <Grid container justifyContent="center" rowSpacing={2}>
@@ -292,6 +388,7 @@ export default function ScoreKeeper() {
                       </Grid>
                       <Grid item>
                         <IconButton
+                          color="info"
                           aria-label="add-score"
                           onClick={() => handleAddPoints(team, index)}
                         >
@@ -323,6 +420,7 @@ export default function ScoreKeeper() {
                       </Grid>
                       <Grid item>
                         <IconButton
+                          color="info"
                           aria-label="add-score"
                           onClick={() => handleAddPoints(team, index)}
                         >
@@ -359,34 +457,104 @@ export default function ScoreKeeper() {
         >
           {scoreHistory.map((score) => {
             return (
-              <Grid item>
-                <Card
-                  square
-                  sx={{
-                    backgroundColor:
-                      score.scoreUpdate > 0
-                        ? "#a4f8e0"
-                        : score.scoreUpdate === 0
-                        ? "#9eeffc"
-                        : "#fa9494",
-                  }}
-                >
-                  <CardContent>
-                    <Typography variant="h6" color="text.secondary">
-                      Round: {score.round} Team: {score.team}
-                    </Typography>
-                    <Typography variant="h5">
-                      Points added: {score.scoreUpdate}
-                    </Typography>
-                    <Typography variant="h6">
-                      Total Team Score: {score.teamScoreTotal}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+              <>
+                <Grid item>
+                  <Card
+                    square
+                    sx={{
+                      backgroundColor:
+                        score.scoreUpdate > 0
+                          ? "#d0fef1"
+                          : score.scoreUpdate === 0
+                          ? "#cbf2f8"
+                          : "#fcc5c5",
+                    }}
+                  >
+                    <CardContent>
+                      <Grid container justifyContent="space-between">
+                        <Grid item xs={12}>
+                          <Typography variant="h6" color="text.secondary">
+                            Round {score.round} Team {score.team}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="h4" sx={{ color: "#282838" }}>
+                            {score.scoreUpdate > 0 ? "+" : ""}
+                            {score.scoreUpdate} <StarRateIcon />
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={4}>
+                          <Button
+                            variant="contained"
+                            color="info"
+                            endIcon={<EditIcon />}
+                            size="small"
+                            sx={{ color: "#ffffff" }}
+                            onClick={() => {
+                              handleEditScoreModal({ ...score });
+                            }}
+                          >
+                            Modify
+                          </Button>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="h6" color="text.secondary">
+                            Total Team Score: {score.teamScoreTotal}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </>
             );
           })}
         </Grid>
+        {editScoreData !== null && editScoreData !== undefined ? (
+          <Dialog open={editScoreModalOpen} onClose={handleEditScoreModal}>
+            <DialogTitle>Edit Score</DialogTitle>
+            <DialogContentText sx={{ px: 3 }}>
+              Enter updated points below to modify the previous score for
+            </DialogContentText>
+            <DialogContentText sx={{ color: "#f77d1a", px: 3 }}>
+              {`Round ${editScoreData.round} Team ${editScoreData.team}`}
+            </DialogContentText>
+            <DialogContent>
+              <TextField
+                id="outlined-basic"
+                label="Score Update"
+                variant="outlined"
+                fullWidth
+                type="number"
+                defaultValue={editScoreData.scoreUpdate}
+                onChange={(e) => setEditScoreInput(e.target.value)}
+                sx={{ color: "#96aaf9", mt: 1 }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={handleEditScoreModal}
+              >
+                Cancel
+              </Button>
+              {!loading ? (
+                <Button variant="outlined" onClick={handleEditScore}>
+                  Update Score
+                </Button>
+              ) : (
+                <CircularProgress
+                  color="info"
+                  size={25}
+                  sx={{ ml: 1, mr: 3 }}
+                />
+              )}
+            </DialogActions>
+          </Dialog>
+        ) : (
+          ""
+        )}
       </Container>
     </>
   );

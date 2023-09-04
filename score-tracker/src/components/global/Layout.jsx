@@ -14,7 +14,7 @@ const lightTheme = createTheme({
       main: "#f77d1a",
     },
     success: {
-      main: "#58ec4f",
+      main: "#40c639",
     },
     info: {
       main: "#96aaf9",
@@ -23,7 +23,7 @@ const lightTheme = createTheme({
       main: "#ed6c02",
     },
     error: {
-      main: "#d32f2f",
+      main: "#d64646",
     },
   },
 });
