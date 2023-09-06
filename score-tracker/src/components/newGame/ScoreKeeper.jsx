@@ -37,6 +37,11 @@ export default function ScoreKeeper() {
     useState(true);
   const [editScoreMode, setEditScoreMode] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [lastScore, setLastScore] = useState({
+    team: "",
+    teamScoreTotal: 0,
+    opposingTeam: "",
+  });
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
@@ -50,6 +55,7 @@ export default function ScoreKeeper() {
   const [snackBarWarning, setSnackBarWarning] = useState(false);
   const [editScoreModalOpen, setEditScoreModalOpen] = useState(false);
   const [editScoreData, setEditScoreData] = useState(null);
+  const [winnerDialogModalOpen, setWinnerDialogModalOpen] = useState(false);
 
   useEffect(() => {
     console.log("editscoredata", editScoreData);
@@ -81,6 +87,10 @@ export default function ScoreKeeper() {
 
   const handleSnackBarWarning = () => {
     setSnackBarWarning(!snackBarWarning);
+  };
+
+  const handleWinnerDialogModal = () => {
+    setWinnerDialogModalOpen(!winnerDialogModalOpen);
   };
 
   const handleAddNewTeam = () => {
@@ -132,6 +142,13 @@ export default function ScoreKeeper() {
           round: currentRound,
         },
       ]);
+      // set last score state
+      let opposingTeam = teams.find((x) => x !== team);
+      setLastScore({
+        team: team,
+        teamScoreTotal: newScoreTotal,
+        opposingTeam: opposingTeam,
+      });
       // input current score into chart data
       let chartDataArray = chartData;
       let scoreIndex = chartDataArray.findIndex(
@@ -238,6 +255,13 @@ export default function ScoreKeeper() {
       }
     }
   }, [scoreHistory]);
+
+  useEffect(() => {
+    console.log(lastScore, teams);
+    if (lastScore.teamScoreTotal >= 121) {
+      handleWinnerDialogModal();
+    }
+  }, [lastScore]);
 
   useEffect(() => {
     // check if both team names have input
@@ -555,6 +579,18 @@ export default function ScoreKeeper() {
         ) : (
           ""
         )}
+        {/* winner alert dialog */}
+        <Dialog open={winnerDialogModalOpen} onClose={handleWinnerDialogModal}>
+          <DialogTitle>
+            Congratulations, Team {lastScore.team}, you out-played the{" "}
+            {lastScore.opposingTeam} chump(s)!{" "}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              You won with a total score of {lastScore.teamScoreTotal}!
+            </DialogContentText>
+          </DialogContent>
+        </Dialog>
       </Container>
     </>
   );
