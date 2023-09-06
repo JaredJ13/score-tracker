@@ -42,6 +42,7 @@ export default function ScoreKeeper() {
     teamScoreTotal: 0,
     opposingTeam: "",
   });
+  const [winningTeamData, setWinningTeamData] = useState(null);
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
@@ -148,6 +149,7 @@ export default function ScoreKeeper() {
         team: team,
         teamScoreTotal: newScoreTotal,
         opposingTeam: opposingTeam,
+        round: currentRound,
       });
       // input current score into chart data
       let chartDataArray = chartData;
@@ -257,9 +259,50 @@ export default function ScoreKeeper() {
   }, [scoreHistory]);
 
   useEffect(() => {
-    console.log(lastScore, teams);
     if (lastScore.teamScoreTotal >= 121) {
-      handleWinnerDialogModal();
+      // check to see if both teams have scored for final round
+      let finalScore = scoreHistory.findIndex(
+        (x) => x.team === lastScore.opposingTeam && x.round === lastScore.round
+      );
+      // if the opposing team has scored then compare two final scores
+      if (finalScore !== -1) {
+        let opposingTeamLastScoreIndex = scoreHistory.findIndex(
+          (x) => (x.round = lastScore.round && x.team == lastScore.opposingTeam)
+        );
+        let opposingTeamLastScore =
+          scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal;
+        if (opposingTeamLastScore > lastScore.teamScoreTotal) {
+          // update winning team data
+          setWinningTeamData({
+            winner: scoreHistory[opposingTeamLastScoreIndex].team,
+            winnerScore:
+              scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
+            loser: lastScore.team,
+            loserScore: lastScore.teamScoreTotal,
+            tieGame: false,
+          });
+          handleWinnerDialogModal();
+        } else if (opposingTeamLastScore < lastScore.teamScoreTotal) {
+          // update winning team data
+          setWinningTeamData({
+            winner: lastScore.team,
+            winnerScore: lastScore.teamScoreTotal,
+            loser: scoreHistory[opposingTeamLastScoreIndex].team,
+            loserScore: scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
+            tieGame: false,
+          });
+          handleWinnerDialogModal();
+        } else {
+          setWinningTeamData({
+            winner: lastScore.team,
+            winnerScore: lastScore.teamScoreTotal,
+            loser: scoreHistory[opposingTeamLastScoreIndex].team,
+            loserScore: scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
+            tieGame: true,
+          });
+          handleWinnerDialogModal();
+        }
+      }
     }
   }, [lastScore]);
 
@@ -498,7 +541,7 @@ export default function ScoreKeeper() {
                       <Grid container justifyContent="space-between">
                         <Grid item xs={12}>
                           <Typography variant="h6" color="text.secondary">
-                            Round {score.round} Team {score.team}
+                            {`Round ${score.round} Team ${score.team}`}
                           </Typography>
                         </Grid>
                         <Grid item xs={6}>
@@ -580,17 +623,28 @@ export default function ScoreKeeper() {
           ""
         )}
         {/* winner alert dialog */}
-        <Dialog open={winnerDialogModalOpen} onClose={handleWinnerDialogModal}>
-          <DialogTitle>
-            Congratulations, Team {lastScore.team}, you out-played the{" "}
-            {lastScore.opposingTeam} chump(s)!{" "}
-          </DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              You won with a total score of {lastScore.teamScoreTotal}!
-            </DialogContentText>
-          </DialogContent>
-        </Dialog>
+        {winningTeamData !== null && winningTeamData !== undefined ? (
+          <Dialog
+            open={winnerDialogModalOpen}
+            onClose={handleWinnerDialogModal}
+          >
+            <DialogTitle>
+              {winningTeamData.tieGame
+                ? `Woah! Looks like you tied!`
+                : `Congratulations Team ${winningTeamData.winner}, you won!`}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {winningTeamData.tieGame
+                  ? `The ${winningTeamData.winner}'s & the ${winningTeamData.loser}'s tied with a score of ${winningTeamData.winnerScore} - ${winningTeamData.loserScore}`
+                  : `Team ${winningTeamData.winner} won the game with a score of ${winningTeamData.winnerScore}`}
+              </DialogContentText>
+            </DialogContent>
+          </Dialog>
+        ) : (
+          ""
+        )}
+        {/* winner alert dialog end */}
       </Container>
     </>
   );
