@@ -267,7 +267,8 @@ export default function ScoreKeeper() {
       // if the opposing team has scored then compare two final scores
       if (finalScore !== -1) {
         let opposingTeamLastScoreIndex = scoreHistory.findIndex(
-          (x) => (x.round = lastScore.round && x.team == lastScore.opposingTeam)
+          (x) =>
+            x.round === lastScore.round && x.team === lastScore.opposingTeam
         );
         let opposingTeamLastScore =
           scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal;
