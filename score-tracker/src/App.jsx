@@ -1,19 +1,18 @@
 import { Routes, Route } from "react-router-dom";
 
 import NewGame from "./pages/NewGame";
-import Layout from "./components/global/Layout";
 
 import NertsScoreTracker from "./components/gameTypes/NertsScoreKeeper";
+import InitialLogin from "./pages/InitialLogin";
 
 function App() {
   return (
     <>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<NewGame />} />
-          <Route path="nerts" element={<NertsScoreTracker />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route path="/" element={<InitialLogin />} />
+        <Route path="/match" element={<NewGame />} />
+        <Route path="nerts" element={<NertsScoreTracker />} />
+      </Routes>
     </>
   );
 }
