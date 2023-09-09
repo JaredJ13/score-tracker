@@ -63,7 +63,7 @@ export default function ScoreKeeper() {
   }, [editScoreData]);
 
   const options = {
-    // title: "",
+    title: "Nerts Match",
     // hAxis: { title: "Teams" },
     // vAxis: { title: "Score" },
     legend: "none",
@@ -384,7 +384,7 @@ export default function ScoreKeeper() {
               ""
             )}
             <Dialog open={addTeamModalOpen} onClose={handleAddTeamModal}>
-              <DialogTitle>Input the Match{"'"}s Team Names</DialogTitle>
+              <DialogTitle>Input the Matches Team Names</DialogTitle>
               <DialogContent>
                 <TextField
                   autoFocus
@@ -397,7 +397,6 @@ export default function ScoreKeeper() {
                   onChange={(e) => setAddTeam1Name(e.target.value)}
                 />
                 <TextField
-                  autoFocus
                   margin="dense"
                   id="new-team-name"
                   label="Team Name"
