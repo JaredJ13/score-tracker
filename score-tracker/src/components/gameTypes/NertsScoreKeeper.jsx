@@ -26,7 +26,15 @@ import { Chart } from "react-google-charts";
 import Layout from "../global/Layout";
 import { useLocation } from "react-router-dom";
 import { db } from "../../firebase/FirebaseConfig";
-import { collection, getDocs } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  updateDoc,
+  doc,
+  Timestamp,
+  increment,
+  writeBatch,
+} from "firebase/firestore";
 
 // icon imports
 import AddIcon from "@mui/icons-material/Add";
@@ -49,6 +57,8 @@ export default function ScoreKeeper() {
   });
   const [winningTeamData, setWinningTeamData] = useState(null);
   const [allUserDisplayNames, setAllUserDisplayNames] = useState([]);
+  const [team1CurrentTotalScore, setTeam1CurrentTotalScore] = useState();
+  const [team2CurrentTotalScore, setTeam2CurrentTotalScore] = useState();
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
@@ -56,6 +66,8 @@ export default function ScoreKeeper() {
   const [scoreInput, setScoreInput] = useState(0);
   const [scoreInput2, setScoreInput2] = useState(0);
   const [editScoreInput, setEditScoreInput] = useState(0);
+  const [team1LinkedUsers, setTeam1LinkedUsers] = useState([]);
+  const [team2LinkedUsers, setTeam2LinkedUsers] = useState([]);
 
   // modal/snackbar state
   const [addTeamModalOpen, setAddTeamModalOpen] = useState(false);
@@ -101,25 +113,134 @@ export default function ScoreKeeper() {
     setWinnerDialogModalOpen(!winnerDialogModalOpen);
   };
 
-  const handleAddNewTeam = () => {
+  const handleAddNewTeam = async () => {
     setChartData([...chartData, [addTeam1Name, 0], [addTeam2Name, 0]]);
     setTeams([...teams, addTeam1Name, addTeam2Name]);
+
+    // add team name to each linked user data
+    let linkedUsers1 = [];
+    team1LinkedUsers.map((user) => {
+      let updatedUser = user;
+      updatedUser["team"] = addTeam1Name;
+      linkedUsers1.push(updatedUser);
+    });
+    setTeam1LinkedUsers([...linkedUsers1]);
+
+    let linkedUsers2 = [];
+    team2LinkedUsers.map((user) => {
+      let updatedUser = user;
+      updatedUser["team"] = addTeam2Name;
+      linkedUsers2.push(updatedUser);
+    });
+    setTeam2LinkedUsers([...linkedUsers2]);
+    // write team linked users and team names to db
+    await updateDoc(doc(db, "matches", `${currentMatchId}`), {
+      teamsInvolved: {
+        [addTeam1Name]: linkedUsers1,
+        [addTeam2Name]: linkedUsers2,
+      },
+    }).catch((err) => {
+      console.log(err.message);
+    });
     handleAddTeamModal();
   };
 
-  // ---------- DB FUNCTIONS ----------------
+  const handleTeam1LinkUsers = (event, values) => {
+    // go through values and set state
+    let valueArray = [];
+    values.map((value) => {
+      valueArray.push({
+        uid: value.userId,
+        displayName: value.displayName,
+        docId: value.docId,
+      });
+    });
+    setTeam1LinkedUsers([...valueArray]);
+  };
+
+  const handleTeam2LinkUsers = (event, values) => {
+    // go through values and set state
+    let valueArray = [];
+    values.map((value) => {
+      valueArray.push({
+        uid: value.userId,
+        displayName: value.displayName,
+        docId: value.docId,
+      });
+    });
+    setTeam2LinkedUsers([...valueArray]);
+  };
+
+  // ---------- DB FUNCTIONS (ASYNCHRONOUS DATABASE FUNCTIONS NEEDED IN USE EFFECT HOOKS)----------------
   const getAllUsers = async () => {
     await getDocs(collection(db, "appUsers")).then((querySnapshot) => {
+      let userArray = [];
       querySnapshot.forEach((doc) => {
-        setAllUserDisplayNames([
-          ...allUserDisplayNames,
-          {
-            docId: doc.id,
-            userId: doc.data().uid,
-            displayName: doc.data().displayName,
-          },
-        ]);
+        userArray.push({
+          docId: doc.id,
+          userId: doc.data().uid,
+          displayName: doc.data().displayName,
+        });
       });
+      setAllUserDisplayNames([...userArray]);
+    });
+  };
+
+  const writeWinLossBatch = async (
+    winningTeam,
+    winningScore,
+    losingTeam,
+    losingScore,
+    tieGame
+  ) => {
+    let currentDate = new Date();
+    const batch = writeBatch(db);
+
+    // update matches collection doc
+    batch.update(doc(db, "matches", currentMatchId), {
+      winningTeam: { score: winningScore, team: winningTeam },
+      losingTeam: { score: losingScore, team: losingTeam },
+      tieGame: tieGame,
+      dateEnded: Timestamp.fromDate(currentDate),
+      completed: true,
+    });
+    // update users collection docs
+    if (!tieGame) {
+      team1LinkedUsers.map((user) => {
+        if (user.team === winningTeam) {
+          batch.update(doc(db, "appUsers", user.docId), { wins: increment(1) });
+        } else {
+          batch.update(doc(db, "appUsers", user.docId), {
+            losses: increment(1),
+          });
+        }
+      });
+      team2LinkedUsers.map((user) => {
+        if (user.team === winningTeam) {
+          batch.update(doc(db, "appUsers", user.docId), { wins: increment(1) });
+        } else {
+          batch.update(doc(db, "appUsers", user.docId), {
+            losses: increment(1),
+          });
+        }
+      });
+    } else {
+      team1LinkedUsers.map((user) => {
+        batch.update(doc(db, "appUsers", user.docId), {
+          tieGames: increment(1),
+        });
+      });
+
+      team2LinkedUsers.map((user) => {
+        batch.update(doc(db, "appUsers", user.docId), {
+          tieGames: increment(1),
+        });
+      });
+    }
+
+    // now commit the batch write
+    await batch.commit().catch((err) => {
+      console.log(err);
     });
   };
 
@@ -132,7 +253,7 @@ export default function ScoreKeeper() {
     handleAddTeamModal();
   }, []);
 
-  const handleAddPoints = (team, index) => {
+  const handleAddPoints = async (team, index) => {
     // add score to score history if score hasn't been added yet for the team this round
     let teamValid = true;
     scoreHistory.map((score) => {
@@ -169,6 +290,32 @@ export default function ScoreKeeper() {
           round: currentRound,
         },
       ]);
+      // set total score state for specific team
+      if (index === 0) {
+        setTeam1CurrentTotalScore(newScoreTotal);
+      } else {
+        setTeam2CurrentTotalScore(newScoreTotal);
+      }
+      // write score history to db's match doc
+      let updatedScoreHistory = [
+        ...scoreHistory,
+        {
+          team: team,
+          teamIndex: index,
+          scoreUpdate:
+            index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+          scoreEntry: scoreItemNum,
+          teamScoreTotal: newScoreTotal,
+          round: currentRound,
+        },
+      ];
+
+      await updateDoc(doc(db, "matches", `${currentMatchId}`), {
+        scoreHistory: updatedScoreHistory,
+      }).catch((err) => {
+        console.log(err.message);
+      });
+
       // set last score state
       let opposingTeam = teams.find((x) => x !== team);
       setLastScore({
@@ -269,7 +416,6 @@ export default function ScoreKeeper() {
   }, [editScoreMode]);
 
   useEffect(() => {
-    console.log(scoreHistory);
     // Check if all teams have scored once this round
     let map = new Map();
     for (let i = 0; i < scoreHistory.length; i++) {
@@ -285,7 +431,7 @@ export default function ScoreKeeper() {
   }, [scoreHistory]);
 
   useEffect(() => {
-    if (lastScore.teamScoreTotal >= 121) {
+    if (team1CurrentTotalScore >= 121 || team2CurrentTotalScore >= 121) {
       // check to see if both teams have scored for final round
       let finalScore = scoreHistory.findIndex(
         (x) => x.team === lastScore.opposingTeam && x.round === lastScore.round
@@ -308,6 +454,14 @@ export default function ScoreKeeper() {
             loserScore: lastScore.teamScoreTotal,
             tieGame: false,
           });
+          // do batch write to db
+          writeWinLossBatch(
+            scoreHistory[opposingTeamLastScoreIndex].team,
+            scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
+            lastScore.team,
+            lastScore.teamScoreTotal,
+            false
+          );
           handleWinnerDialogModal();
         } else if (opposingTeamLastScore < lastScore.teamScoreTotal) {
           // update winning team data
@@ -318,6 +472,14 @@ export default function ScoreKeeper() {
             loserScore: scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
             tieGame: false,
           });
+          // do batch write to db
+          writeWinLossBatch(
+            lastScore.team,
+            lastScore.teamScoreTotal,
+            scoreHistory[opposingTeamLastScoreIndex].team,
+            scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
+            false
+          );
           handleWinnerDialogModal();
         } else {
           setWinningTeamData({
@@ -327,6 +489,14 @@ export default function ScoreKeeper() {
             loserScore: scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
             tieGame: true,
           });
+          // do batch write to db
+          writeWinLossBatch(
+            lastScore.team,
+            lastScore.teamScoreTotal,
+            scoreHistory[opposingTeamLastScoreIndex].team,
+            scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
+            true
+          );
           handleWinnerDialogModal();
         }
       }
@@ -428,11 +598,14 @@ export default function ScoreKeeper() {
                     options={allUserDisplayNames}
                     getOptionLabel={(option) => option.displayName}
                     // defaultValue={sessionStorage.getItem("currentUserId")}
+                    onChange={(event, value) => {
+                      handleTeam1LinkUsers(event, value);
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
                         variant="standard"
-                        label="Link User Accounts to Team 1"
+                        label="Link Player Accounts to Team 1"
                       />
                     )}
                   />
@@ -450,11 +623,14 @@ export default function ScoreKeeper() {
                     options={allUserDisplayNames}
                     getOptionLabel={(option) => option.displayName}
                     // defaultValue={sessionStorage.getItem("currentUserId")}
+                    onChange={(event, value) => {
+                      handleTeam2LinkUsers(event, value);
+                    }}
                     renderInput={(params) => (
                       <TextField
                         {...params}
                         variant="standard"
-                        label="Link User Accounts to Team 2"
+                        label="Link Player Accounts to Team 2"
                       />
                     )}
                   />

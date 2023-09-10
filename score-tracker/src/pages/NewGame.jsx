@@ -36,7 +36,6 @@ export default function NewGame() {
       winningTeam: null,
       losingTeam: null,
       teamsInvolved: null,
-      usersInvolved: null,
     })
       .then((result) => {
         // navigate to nerts component with match id
