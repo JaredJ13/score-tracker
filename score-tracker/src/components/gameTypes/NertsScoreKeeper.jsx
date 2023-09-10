@@ -34,6 +34,7 @@ import {
   Timestamp,
   increment,
   writeBatch,
+  arrayUnion,
 } from "firebase/firestore";
 
 // icon imports
@@ -143,6 +144,9 @@ export default function ScoreKeeper() {
       console.log(err.message);
     });
     handleAddTeamModal();
+
+    // call update game involvement to all linked users function
+    updateLinkedUsers();
   };
 
   const handleTeam1LinkUsers = (event, values) => {
@@ -183,6 +187,26 @@ export default function ScoreKeeper() {
         });
       });
       setAllUserDisplayNames([...userArray]);
+    });
+  };
+
+  const updateLinkedUsers = async () => {
+    const batch = writeBatch(db);
+
+    team1LinkedUsers.map((user) => {
+      batch.update(doc(db, "appUsers", user.docId), {
+        matchesInvolvedIn: arrayUnion(currentMatchId),
+      });
+    });
+    team2LinkedUsers.map((user) => {
+      batch.update(doc(db, "appUsers", user.docId), {
+        matchesInvolvedIn: arrayUnion(currentMatchId),
+      });
+    });
+
+    // now commit the batch write
+    await batch.commit().catch((err) => {
+      console.log(err);
     });
   };
 
