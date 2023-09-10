@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import InsertChartOutlinedTwoToneIcon from "@mui/icons-material/InsertChartOutlinedTwoTone";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import PortraitOutlinedIcon from "@mui/icons-material/PortraitOutlined";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 // themes
 const lightTheme = createTheme({
