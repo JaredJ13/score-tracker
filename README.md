@@ -1,2 +1,4 @@
 # score-tracker
-A mobile-first web app developed to manage card game score keeping in an organized and efficient manner.
+A mobile-first web app developed to manage card game scores/game histories and provide users personal performance stats.
+
+Built with React.js, Vite, and Material-UI.
