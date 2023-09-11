@@ -1,12 +1,13 @@
 /* eslint-disable react/prop-types */
 import { Paper, BottomNavigation, BottomNavigationAction } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
 
 // icon imports
 import InsertChartOutlinedTwoToneIcon from "@mui/icons-material/InsertChartOutlinedTwoTone";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import PortraitOutlinedIcon from "@mui/icons-material/PortraitOutlined";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // themes
 const lightTheme = createTheme({
@@ -36,6 +37,20 @@ const lightTheme = createTheme({
 export default function Layout({ children }) {
   // state
   const [navItemSelect, setNavItemSelect] = useState(1);
+
+  // initialize useNavigate
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // navigate to selected menu item page
+    if (navItemSelect === 0) {
+      navigate("/stats");
+    } else if (navItemSelect === 1) {
+      navigate("/match");
+    } else {
+      navigate("/account");
+    }
+  }, [navItemSelect]);
 
   return (
     <>
