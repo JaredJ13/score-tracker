@@ -34,24 +34,7 @@ const lightTheme = createTheme({
   },
 });
 
-export default function Layout({ children }) {
-  // state
-  const [navItemSelect, setNavItemSelect] = useState(1);
-
-  // initialize useNavigate
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // navigate to selected menu item page
-    if (navItemSelect === 0) {
-      navigate("/stats");
-    } else if (navItemSelect === 1) {
-      navigate("/match");
-    } else {
-      navigate("/account");
-    }
-  }, [navItemSelect]);
-
+export default function Layout({ children, routeState, setRouteState }) {
   return (
     <>
       <ThemeProvider theme={lightTheme}>
@@ -64,8 +47,8 @@ export default function Layout({ children }) {
           >
             <BottomNavigation
               color="primary"
-              value={navItemSelect}
-              onChange={(event, newValue) => setNavItemSelect(newValue)}
+              value={routeState}
+              onChange={(event, newValue) => setRouteState(newValue)}
             >
               <BottomNavigationAction
                 label="Stats"
