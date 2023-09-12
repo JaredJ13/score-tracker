@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { auth } from "./firebase/FirebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
 
 import NewGame from "./pages/NewGame";
 
@@ -10,30 +11,27 @@ import Account from "./pages/Account";
 
 // game type component imports
 import NertsScoreTracker from "./components/gameTypes/NertsScoreKeeper";
-import Layout from "./components/global/Layout";
+import { useState } from "react";
 
 function App() {
-  // state
-  const [navItemSelect, setNavItemSelect] = useState(null);
-
-  // initialize useNavigate
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // navigate to selected menu item page
-    if (navItemSelect === 0) {
-      navigate("/stats");
-    } else if (navItemSelect === 1) {
-      navigate("/match");
-    } else if (navItemSelect === 2) {
-      navigate("/account");
+  const [user, setUser] = useState(null);
+  // keep track of auth state with an observer on auth object, so we can conditionally render our routes
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      // User is signed in, see docs for a list of available properties
+      setUser(user);
     } else {
-      navigate("/");
+      setUser(null);
     }
-  }, [navItemSelect]);
+  });
+
   return (
     <>
-      <Layout routeState={navItemSelect} setRouteState={setNavItemSelect}>
+      {user === null ? (
+        <Routes>
+          <Route path="/" element={<InitialLogin />} />
+        </Routes>
+      ) : (
         <Routes>
           <Route path="/" element={<InitialLogin />} />
           <Route path="stats" element={<Stats />} />
@@ -41,7 +39,7 @@ function App() {
           <Route path="account" element={<Account />} />
           <Route path="nerts" element={<NertsScoreTracker />} />
         </Routes>
-      </Layout>
+      )}
     </>
   );
 }

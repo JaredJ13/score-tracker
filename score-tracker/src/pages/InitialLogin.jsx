@@ -109,7 +109,7 @@ export default function InitialLogin() {
           // store user id in session storage
           sessionStorage.setItem("currentUserId", user.uid);
           if (user) {
-            navigate("/match");
+            navigate("/stats");
           }
         }
       }

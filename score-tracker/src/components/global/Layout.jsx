@@ -1,13 +1,13 @@
 /* eslint-disable react/prop-types */
 import { Paper, BottomNavigation, BottomNavigationAction } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 // icon imports
 import InsertChartOutlinedTwoToneIcon from "@mui/icons-material/InsertChartOutlinedTwoTone";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import PortraitOutlinedIcon from "@mui/icons-material/PortraitOutlined";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 // themes
 const lightTheme = createTheme({
@@ -34,7 +34,11 @@ const lightTheme = createTheme({
   },
 });
 
-export default function Layout({ children, routeState, setRouteState }) {
+export default function Layout({ children }) {
+  // get pathname incase a user goes to a component by manually typing address in
+  const pathname = window.location.pathname;
+  const [routeState, setRouteState] = useState(pathname);
+
   return (
     <>
       <ThemeProvider theme={lightTheme}>
@@ -53,14 +57,23 @@ export default function Layout({ children, routeState, setRouteState }) {
               <BottomNavigationAction
                 label="Stats"
                 icon={<InsertChartOutlinedTwoToneIcon sx={{ fontSize: 30 }} />}
+                value={"/stats"}
+                LinkComponent={Link}
+                to={"/stats"}
               />
               <BottomNavigationAction
                 label="Match"
                 icon={<AddBoxOutlinedIcon sx={{ fontSize: 30 }} />}
+                value={"/match"}
+                LinkComponent={Link}
+                to={"/match"}
               />
               <BottomNavigationAction
                 label="Account"
                 icon={<PortraitOutlinedIcon sx={{ fontSize: 30 }} />}
+                value={"/account"}
+                LinkComponent={Link}
+                to={"/account"}
               />
             </BottomNavigation>
           </Paper>

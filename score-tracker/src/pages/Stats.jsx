@@ -10,6 +10,8 @@ import { auth, db } from "../firebase/FirebaseConfig";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
+import Layout from "../components/global/Layout";
+
 export default function Stats() {
   const [userData, setUserData] = useState([]);
   const [winLossRatio, setWinLossRatio] = useState(0);
@@ -68,68 +70,70 @@ export default function Stats() {
 
   return (
     <>
-      <Container>
-        <Paper elevation={0} sx={{ mt: 2, mb: 4, p: 1 }}>
-          <Typography
-            align="center"
-            variant="h3"
-            component="h1"
-            color="primary"
-            sx={{ fontWeight: "bold" }}
-          >
-            Stats
-          </Typography>
-        </Paper>
-        <Paper>
-          <Grid container justifyContent="center" rowGap={2}>
-            <Grid item xs={12}>
-              <Typography align="center" variant="h4" pt={2}>
-                {userName}
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography align="center">
-                {isNaN(winLossRatio) === false ? (
+      <Layout>
+        <Container>
+          <Paper elevation={0} sx={{ mt: 2, mb: 4, p: 1 }}>
+            <Typography
+              align="center"
+              variant="h3"
+              component="h1"
+              color="primary"
+              sx={{ fontWeight: "bold" }}
+            >
+              Stats
+            </Typography>
+          </Paper>
+          <Paper>
+            <Grid container justifyContent="center" rowGap={2}>
+              <Grid item xs={12}>
+                <Typography align="center" variant="h4" pt={2}>
+                  {userName}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography align="center">
+                  {isNaN(winLossRatio) === false ? (
+                    <Chip
+                      color="info"
+                      sx={{ color: "#fff" }}
+                      label={"Win/Loss Ratio: " + winLossRatio}
+                    />
+                  ) : (
+                    <Chip color="info" sx={{ color: "#fff" }} label="0" />
+                  )}
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography align="center">
                   <Chip
                     color="info"
                     sx={{ color: "#fff" }}
-                    label={"Win/Loss Ratio: " + winLossRatio}
+                    label={"Win Rate: " + winRate + "%"}
                   />
-                ) : (
-                  <Chip color="info" sx={{ color: "#fff" }} label="0" />
-                )}
-              </Typography>
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography align="center">
+                  <Chip
+                    color="info"
+                    sx={{ color: "#fff" }}
+                    label={"# of Draws " + userData.tieGames}
+                  />
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography align="center" pb={2}>
+                  <Chip
+                    color="info"
+                    sx={{ color: "#fff" }}
+                    label={"Games Played " + numGamesPlayed}
+                  />
+                </Typography>
+              </Grid>
             </Grid>
-            <Grid item xs={12}>
-              <Typography align="center">
-                <Chip
-                  color="info"
-                  sx={{ color: "#fff" }}
-                  label={"Win Rate: " + winRate + "%"}
-                />
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography align="center">
-                <Chip
-                  color="info"
-                  sx={{ color: "#fff" }}
-                  label={"# of Draws " + userData.tieGames}
-                />
-              </Typography>
-            </Grid>
-            <Grid item xs={12}>
-              <Typography align="center" pb={2}>
-                <Chip
-                  color="info"
-                  sx={{ color: "#fff" }}
-                  label={"Games Played " + numGamesPlayed}
-                />
-              </Typography>
-            </Grid>
-          </Grid>
-        </Paper>
-      </Container>
+          </Paper>
+        </Container>
+      </Layout>
     </>
   );
 }
