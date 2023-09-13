@@ -53,9 +53,13 @@ export default function NewGame() {
         let inProgress = [];
         querySnapshot.forEach((doc) => {
           // map through matchesInvolvedIn and keep all that are not complete
-          const array = doc.data().matchesInvolvedIn;
-          array.map((match) => {
-            if (!match.complete) {
+          const arrayInvolved = doc.data().matchesInvolvedIn;
+          const arrayComplete = doc.data().matchesCompleted;
+
+          arrayInvolved.map((match) => {
+            // go through and find ones not in completed array
+            const isComplete = arrayComplete.find((x) => x === match);
+            if (!isComplete) {
               inProgress.push(match);
             }
           });
@@ -167,22 +171,20 @@ export default function NewGame() {
                     return (
                       <Grid item xs={10}>
                         <Card
-                          key={game.matchId}
+                          key={game}
                           sx={{ backgroundColor: "#96aaf9", color: "#fff" }}
                         >
                           <CardContent>
                             <Grid container justifyContent="space-between">
                               <Grid item xs={3}>
                                 <Typography pt={1} sx={{ width: "100%" }}>
-                                  {game.matchId}
+                                  {game}
                                 </Typography>
                               </Grid>
                               <Grid item xs={2}>
                                 <Button
                                   endIcon={<PlayCircleOutlineOutlinedIcon />}
-                                  onClick={() =>
-                                    handleContinueMatch(game.matchId)
-                                  }
+                                  onClick={() => handleContinueMatch(game)}
                                   sx={{ width: "100%", color: "#fff" }}
                                 ></Button>
                               </Grid>

@@ -46,9 +46,9 @@ export default function Stats() {
         (Number(userData.wins) + Number(userData.losses))) *
       100;
     const numGames =
-      userData.matchesInvolvedIn !== undefined &&
-      userData.matchesInvolvedIn !== null
-        ? userData.matchesInvolvedIn.length
+      userData.matchesCompleted !== undefined &&
+      userData.matchesCompleted !== null
+        ? userData.matchesCompleted.length
         : 0;
     const userName =
       userData.displayName !== "" &&
@@ -117,7 +117,25 @@ export default function Stats() {
                   <Chip
                     color="info"
                     sx={{ color: "#fff" }}
-                    label={"# of Draws " + userData.tieGames}
+                    label={"# of Draws: " + userData.tieGames}
+                  />
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography align="center">
+                  <Chip
+                    color="info"
+                    sx={{ color: "#fff" }}
+                    label={"Other Players Skunked: " + userData.skunkedOther}
+                  />
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography align="center">
+                  <Chip
+                    color="info"
+                    sx={{ color: "#fff" }}
+                    label={"Been Skunked: " + userData.beenSkunked}
                   />
                 </Typography>
               </Grid>
@@ -126,7 +144,7 @@ export default function Stats() {
                   <Chip
                     color="info"
                     sx={{ color: "#fff" }}
-                    label={"Games Played " + numGamesPlayed}
+                    label={"Games Completed: " + numGamesPlayed}
                   />
                 </Typography>
               </Grid>

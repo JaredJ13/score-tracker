@@ -144,9 +144,6 @@ export default function ScoreKeeper() {
     });
     setTeam2LinkedUsers([...linkedUsers2]);
     handleAddTeamModal();
-
-    // call update game involvement to all linked users function
-    updateLinkedUsersStartGame();
   };
 
   const handleTeam1LinkUsers = (event, values) => {
@@ -227,12 +224,12 @@ export default function ScoreKeeper() {
 
     team1LinkedUsers.map((user) => {
       batch.update(doc(db, "appUsers", user.docId), {
-        matchesInvolvedIn: arrayUnion(currentMatchIdState),
+        matchesInvolvedIn: arrayUnion(currentMatchId),
       });
     });
     team2LinkedUsers.map((user) => {
       batch.update(doc(db, "appUsers", user.docId), {
-        matchesInvolvedIn: arrayUnion(currentMatchIdState),
+        matchesInvolvedIn: arrayUnion(currentMatchId),
       });
     });
 
@@ -407,6 +404,8 @@ export default function ScoreKeeper() {
         ];
         await writeNewMatch();
         await writeTeamsInvolved();
+        // call update game involvement to all linked users function
+        await updateLinkedUsersStartGame();
         setCurrentMatchIdState(currentMatchId);
         await updateDoc(doc(db, "matches", `${currentMatchId}`), {
           scoreHistory: updatedScoreHistory,
