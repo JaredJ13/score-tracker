@@ -1,31 +1,81 @@
-import { useState } from "react";
+/* eslint-disable react/jsx-key */
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
+  Card,
+  CardContent,
   Container,
   FormControl,
   Grid,
+  IconButton,
   InputLabel,
   MenuItem,
   Paper,
   Select,
   Typography,
 } from "@mui/material";
-import { db } from "../firebase/FirebaseConfig";
-import { collection, Timestamp, addDoc } from "firebase/firestore";
+import { db, auth } from "../firebase/FirebaseConfig";
+import {
+  collection,
+  Timestamp,
+  addDoc,
+  where,
+  query,
+  getDocs,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 
 import Layout from "../components/global/Layout";
 
 // icon imports
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PlayCircleOutlineOutlinedIcon from "@mui/icons-material/PlayCircleOutlineOutlined";
 
 export default function NewGame() {
   // state
   const [gameType, setGameType] = useState("");
+  const [inProgressGames, setInProgressGames] = useState([]);
+  const [continueMatchData, setContinueMatchData] = useState([]);
 
   // init use nav
   const navigate = useNavigate();
 
+  // --------- DB FUNCTIONS -------------
+  const getIncompleteMatches = async () => {
+    const incompleteMatchesQuery = query(
+      collection(db, "appUsers"),
+      where("uid", "==", `${auth.currentUser.uid}`)
+    );
+    await getDocs(incompleteMatchesQuery)
+      .then((querySnapshot) => {
+        let inProgress = [];
+        querySnapshot.forEach((doc) => {
+          // map through matchesInvolvedIn and keep all that are not complete
+          const array = doc.data().matchesInvolvedIn;
+          array.map((match) => {
+            if (!match.complete) {
+              inProgress.push(match);
+            }
+          });
+        });
+        setInProgressGames(inProgress);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  // --------- USE EFFECTS --------------
+
+  // inital render
+  useEffect(() => {
+    // call get incomplete game data function
+    getIncompleteMatches();
+  }, []);
+
+  // --------- HANDLERS -----------------
   const handleNewMatch = async () => {
     const currentDate = new Date();
     // create new match doc
@@ -45,6 +95,18 @@ export default function NewGame() {
       .catch((err) => {
         console.log(err.message);
       });
+  };
+
+  const handleContinueMatch = async (matchId) => {
+    // get selected match id's data
+    const matchRef = doc(db, "matches", `${matchId}`);
+    const docSnap = await getDoc(matchRef);
+
+    if (docSnap.exists()) {
+      navigate("/nerts", { state: { matchData: docSnap.data() } });
+    } else {
+      console.log("no data returned");
+    }
   };
 
   return (
@@ -74,6 +136,7 @@ export default function NewGame() {
               </Grid>
             </Grid>
           </Paper>
+          {/* new game paper */}
           <Paper elevation={1}>
             <Typography align="center" variant="h5" pt={2} color="default">
               New Game
@@ -108,6 +171,48 @@ export default function NewGame() {
               </Grid>
             </Grid>
           </Paper>
+          {/* end new game paper */}
+          {/* continue game paper */}
+          <Paper sx={{ mt: 4 }} elevation={1}>
+            <Typography align="center" variant="h5" pt={2} color="default">
+              Continue a Game
+            </Typography>
+            <Grid container justifyContent="center" spacing={2} mt={2} pb={2}>
+              {inProgressGames.length !== undefined &&
+              inProgressGames.length > 0
+                ? inProgressGames.map((game) => {
+                    return (
+                      <Grid item xs={10}>
+                        <Card
+                          key={game.matchId}
+                          sx={{ backgroundColor: "#96aaf9", color: "#fff" }}
+                        >
+                          <CardContent>
+                            <Grid container justifyContent="space-between">
+                              <Grid item xs={3}>
+                                <Typography pt={1} sx={{ width: "100%" }}>
+                                  {game.matchId}
+                                </Typography>
+                              </Grid>
+                              <Grid item xs={2}>
+                                <Button
+                                  endIcon={<PlayCircleOutlineOutlinedIcon />}
+                                  onClick={() =>
+                                    handleContinueMatch(game.matchId)
+                                  }
+                                  sx={{ width: "100%", color: "#fff" }}
+                                ></Button>
+                              </Grid>
+                            </Grid>
+                          </CardContent>
+                        </Card>
+                      </Grid>
+                    );
+                  })
+                : ""}
+            </Grid>
+          </Paper>
+          {/* end continue game paper */}
         </Container>
       </Layout>
     </>

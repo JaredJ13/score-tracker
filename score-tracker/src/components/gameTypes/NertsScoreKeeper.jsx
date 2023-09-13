@@ -42,6 +42,7 @@ import Layout from "../global/Layout";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import StarRateIcon from "@mui/icons-material/StarRate";
+import KeyboardBackspaceOutlinedIcon from "@mui/icons-material/KeyboardBackspaceOutlined";
 
 export default function ScoreKeeper() {
   const [teams, setTeams] = useState([]);
@@ -61,6 +62,8 @@ export default function ScoreKeeper() {
   const [allUserDisplayNames, setAllUserDisplayNames] = useState([]);
   const [team1CurrentTotalScore, setTeam1CurrentTotalScore] = useState();
   const [team2CurrentTotalScore, setTeam2CurrentTotalScore] = useState();
+  const [disableAddPointRelatives, setDisableAddPointRelatives] =
+    useState(false);
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
@@ -80,7 +83,8 @@ export default function ScoreKeeper() {
 
   // get data from useNavigate initialize navigate
   const location = useLocation();
-  let currentMatchId = location.state.matchId;
+  const currentMatchId = location.state.matchId;
+  const continueMatchData = location.state.matchData;
   const navigate = useNavigate();
 
   // bar chart options
@@ -263,16 +267,16 @@ export default function ScoreKeeper() {
         });
       });
     }
-
     // now commit the batch write
     await batch
       .commit()
       .then(() => {
-        navigate("/match");
+        // disable inputs and add point buttons because match is over
+        setDisableAddPointRelatives(true);
+        handleWinnerDialogModal();
       })
       .catch((err) => {
         console.log(err);
-        navigate("/match");
       });
   };
 
@@ -447,8 +451,8 @@ export default function ScoreKeeper() {
     }, 3000);
   }, [editScoreMode]);
 
+  // Check if all teams have scored once this round
   useEffect(() => {
-    // Check if all teams have scored once this round
     let map = new Map();
     for (let i = 0; i < scoreHistory.length; i++) {
       if (scoreHistory[i].round === currentRound) {
@@ -462,6 +466,7 @@ export default function ScoreKeeper() {
     }
   }, [scoreHistory]);
 
+  // handle if last score was a winning score
   useEffect(() => {
     if (team1CurrentTotalScore >= 121 || team2CurrentTotalScore >= 121) {
       // check to see if both teams have scored for final round
@@ -494,7 +499,6 @@ export default function ScoreKeeper() {
             lastScore.teamScoreTotal,
             false
           );
-          handleWinnerDialogModal();
         } else if (opposingTeamLastScore < lastScore.teamScoreTotal) {
           // update winning team data
           setWinningTeamData({
@@ -512,24 +516,8 @@ export default function ScoreKeeper() {
             scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
             false
           );
-          handleWinnerDialogModal();
         } else {
-          setWinningTeamData({
-            winner: lastScore.team,
-            winnerScore: lastScore.teamScoreTotal,
-            loser: scoreHistory[opposingTeamLastScoreIndex].team,
-            loserScore: scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
-            tieGame: true,
-          });
-          // do batch write to db
-          writeWinLossBatch(
-            lastScore.team,
-            lastScore.teamScoreTotal,
-            scoreHistory[opposingTeamLastScoreIndex].team,
-            scoreHistory[opposingTeamLastScoreIndex].teamScoreTotal,
-            true
-          );
-          handleWinnerDialogModal();
+          // To Do: add modal that tells players to keep playing until someone wins
         }
       }
     }
@@ -548,6 +536,9 @@ export default function ScoreKeeper() {
     <>
       <Layout>
         <Container sx={{ mb: 4 }}>
+          <IconButton sx={{ mt: 2 }} onClick={() => navigate("/match")}>
+            <KeyboardBackspaceOutlinedIcon />
+          </IconButton>
           <Paper square sx={{ pb: 4, mt: 3 }}>
             {teams.length >= 1 && teams.length !== undefined ? (
               <>
@@ -710,6 +701,7 @@ export default function ScoreKeeper() {
                             variant="outlined"
                             fullWidth
                             type="number"
+                            disabled={disableAddPointRelatives}
                             value={scoreInput}
                             onChange={(e) => setScoreInput(e.target.value)}
                           />
@@ -718,6 +710,7 @@ export default function ScoreKeeper() {
                           <IconButton
                             color="info"
                             aria-label="add-score"
+                            disabled={disableAddPointRelatives}
                             onClick={() => handleAddPoints(team, index)}
                           >
                             <AddIcon />
@@ -742,6 +735,7 @@ export default function ScoreKeeper() {
                             variant="outlined"
                             fullWidth
                             type="number"
+                            disabled={disableAddPointRelatives}
                             value={scoreInput2}
                             onChange={(e) => setScoreInput2(e.target.value)}
                           />
@@ -750,6 +744,7 @@ export default function ScoreKeeper() {
                           <IconButton
                             color="info"
                             aria-label="add-score"
+                            disabled={disableAddPointRelatives}
                             onClick={() => handleAddPoints(team, index)}
                           >
                             <AddIcon />
