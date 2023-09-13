@@ -34,6 +34,7 @@ import {
   increment,
   writeBatch,
   arrayUnion,
+  addDoc,
 } from "firebase/firestore";
 
 import Layout from "../global/Layout";
@@ -216,6 +217,28 @@ export default function ScoreKeeper() {
     });
   };
 
+  const writeNewMatch = async () => {
+    const currentDate = new Date();
+    // create new match doc
+    await addDoc(collection(db, "matches"), {
+      dateStarted: Timestamp.fromDate(currentDate),
+      dateEnded: null,
+      completed: false,
+      gameType: "nerts",
+      winningTeam: null,
+      losingTeam: null,
+      teamsInvolved: null,
+      scoreHistory: scoreHistory,
+    })
+      .then((result) => {
+        console.log("match saved in db");
+        sessionStorage.setItem("currentMatchId", result.id);
+      })
+      .catch((err) => {
+        console.log(err.message);
+      });
+  };
+
   const writeWinLossBatch = async (
     winningTeam,
     winningScore,
@@ -238,33 +261,57 @@ export default function ScoreKeeper() {
     if (!tieGame) {
       team1LinkedUsers.map((user) => {
         if (user.team === winningTeam) {
-          batch.update(doc(db, "appUsers", user.docId), { wins: increment(1) });
+          if (losingScore < 62) {
+            // skunked other team!
+            batch.update(doc(db, "appUsers", user.docId), {
+              wins: increment(1),
+              skunkedOther: increment(1),
+            });
+          } else {
+            batch.update(doc(db, "appUsers", user.docId), {
+              wins: increment(1),
+            });
+          }
         } else {
-          batch.update(doc(db, "appUsers", user.docId), {
-            losses: increment(1),
-          });
+          if (losingScore < 62) {
+            // you got skunked fool
+            batch.update(doc(db, "appUsers", user.docId), {
+              losses: increment(1),
+              beenSkunked: increment(1),
+            });
+          } else {
+            batch.update(doc(db, "appUsers", user.docId), {
+              losses: increment(1),
+            });
+          }
         }
       });
       team2LinkedUsers.map((user) => {
         if (user.team === winningTeam) {
-          batch.update(doc(db, "appUsers", user.docId), { wins: increment(1) });
+          if (losingScore < 62) {
+            // skunked other team!
+            batch.update(doc(db, "appUsers", user.docId), {
+              wins: increment(1),
+              skunkedOther: increment(1),
+            });
+          } else {
+            batch.update(doc(db, "appUsers", user.docId), {
+              wins: increment(1),
+            });
+          }
         } else {
-          batch.update(doc(db, "appUsers", user.docId), {
-            losses: increment(1),
-          });
+          if (losingScore < 62) {
+            // you got skunked fool
+            batch.update(doc(db, "appUsers", user.docId), {
+              losses: increment(1),
+              beenSkunked: increment(1),
+            });
+          } else {
+            batch.update(doc(db, "appUsers", user.docId), {
+              losses: increment(1),
+            });
+          }
         }
-      });
-    } else {
-      team1LinkedUsers.map((user) => {
-        batch.update(doc(db, "appUsers", user.docId), {
-          tieGames: increment(1),
-        });
-      });
-
-      team2LinkedUsers.map((user) => {
-        batch.update(doc(db, "appUsers", user.docId), {
-          tieGames: increment(1),
-        });
       });
     }
     // now commit the batch write
@@ -314,6 +361,28 @@ export default function ScoreKeeper() {
           index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
       }
 
+      if (currentRound >= 2) {
+        // write score history to db's match doc
+        let updatedScoreHistory = [
+          ...scoreHistory,
+          {
+            team: team,
+            teamIndex: index,
+            scoreUpdate:
+              index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+            scoreEntry: scoreItemNum,
+            teamScoreTotal: newScoreTotal,
+            round: currentRound,
+          },
+        ];
+
+        await updateDoc(doc(db, "matches", `${currentMatchId}`), {
+          scoreHistory: updatedScoreHistory,
+        }).catch((err) => {
+          console.log(err.message);
+        });
+      }
+
       setScoreHistory([
         ...scoreHistory,
         {
@@ -332,25 +401,6 @@ export default function ScoreKeeper() {
       } else {
         setTeam2CurrentTotalScore(newScoreTotal);
       }
-      // write score history to db's match doc
-      let updatedScoreHistory = [
-        ...scoreHistory,
-        {
-          team: team,
-          teamIndex: index,
-          scoreUpdate:
-            index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
-          scoreEntry: scoreItemNum,
-          teamScoreTotal: newScoreTotal,
-          round: currentRound,
-        },
-      ];
-
-      await updateDoc(doc(db, "matches", `${currentMatchId}`), {
-        scoreHistory: updatedScoreHistory,
-      }).catch((err) => {
-        console.log(err.message);
-      });
 
       // set last score state
       let opposingTeam = teams.find((x) => x !== team);
@@ -463,6 +513,10 @@ export default function ScoreKeeper() {
           return setCurrentRound(currentRound + 1);
         }
       }
+    }
+
+    if (scoreHistory.length === 2) {
+      writeNewMatch();
     }
   }, [scoreHistory]);
 

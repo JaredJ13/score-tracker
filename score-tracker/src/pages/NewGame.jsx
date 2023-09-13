@@ -76,27 +76,10 @@ export default function NewGame() {
   }, []);
 
   // --------- HANDLERS -----------------
-  const handleNewMatch = async () => {
-    const currentDate = new Date();
-    // create new match doc
-    await addDoc(collection(db, "matches"), {
-      dateStarted: Timestamp.fromDate(currentDate),
-      dateEnded: null,
-      completed: false,
-      gameType: gameType,
-      winningTeam: null,
-      losingTeam: null,
-      teamsInvolved: null,
-    })
-      .then((result) => {
-        // navigate to nerts component with match id
-        navigate("/nerts", { state: { matchId: result.id } });
-      })
-      .catch((err) => {
-        console.log(err.message);
-      });
+  const handleNewMatch = () => {
+    // we don't write the new match to the db until first points are scored
+    navigate("/nerts");
   };
-
   const handleContinueMatch = async (matchId) => {
     // get selected match id's data
     const matchRef = doc(db, "matches", `${matchId}`);
