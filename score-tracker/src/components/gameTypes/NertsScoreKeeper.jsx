@@ -65,6 +65,7 @@ export default function ScoreKeeper() {
   const [team2CurrentTotalScore, setTeam2CurrentTotalScore] = useState();
   const [disableAddPointRelatives, setDisableAddPointRelatives] =
     useState(false);
+  const [currentMatchIdState, setCurrentMatchIdState] = useState(null);
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
@@ -84,9 +85,10 @@ export default function ScoreKeeper() {
 
   // get data from useNavigate initialize navigate
   const location = useLocation();
-  const currentMatchId = location.state.matchId;
-  const continueMatchData = location.state.matchData;
+  // const continueMatchData = location.state.matchData;
   const navigate = useNavigate();
+
+  let currentMatchId = 0;
 
   // bar chart options
   const options = {
@@ -141,19 +143,10 @@ export default function ScoreKeeper() {
       linkedUsers2.push(updatedUser);
     });
     setTeam2LinkedUsers([...linkedUsers2]);
-    // write team linked users and team names to db
-    await updateDoc(doc(db, "matches", `${currentMatchId}`), {
-      teamsInvolved: {
-        [addTeam1Name]: linkedUsers1,
-        [addTeam2Name]: linkedUsers2,
-      },
-    }).catch((err) => {
-      console.log(err.message);
-    });
     handleAddTeamModal();
 
     // call update game involvement to all linked users function
-    updateLinkedUsers();
+    updateLinkedUsersStartGame();
   };
 
   const handleTeam1LinkUsers = (event, values) => {
@@ -197,17 +190,49 @@ export default function ScoreKeeper() {
     });
   };
 
-  const updateLinkedUsers = async () => {
+  // write team linked users and team names to db
+  const writeTeamsInvolved = async () => {
+    await updateDoc(doc(db, "matches", `${currentMatchId}`), {
+      teamsInvolved: {
+        [addTeam1Name]: team1LinkedUsers,
+        [addTeam2Name]: team2LinkedUsers,
+      },
+    }).catch((err) => {
+      console.log(err.message);
+    });
+  };
+
+  const updateLinkedUsersEndGame = async () => {
     const batch = writeBatch(db);
 
     team1LinkedUsers.map((user) => {
       batch.update(doc(db, "appUsers", user.docId), {
-        matchesInvolvedIn: arrayUnion(currentMatchId),
+        matchesCompleted: arrayUnion(currentMatchIdState),
       });
     });
     team2LinkedUsers.map((user) => {
       batch.update(doc(db, "appUsers", user.docId), {
-        matchesInvolvedIn: arrayUnion(currentMatchId),
+        matchesCompleted: arrayUnion(currentMatchIdState),
+      });
+    });
+
+    // now commit the batch write
+    await batch.commit().catch((err) => {
+      console.log(err);
+    });
+  };
+
+  const updateLinkedUsersStartGame = async () => {
+    const batch = writeBatch(db);
+
+    team1LinkedUsers.map((user) => {
+      batch.update(doc(db, "appUsers", user.docId), {
+        matchesInvolvedIn: arrayUnion(currentMatchIdState),
+      });
+    });
+    team2LinkedUsers.map((user) => {
+      batch.update(doc(db, "appUsers", user.docId), {
+        matchesInvolvedIn: arrayUnion(currentMatchIdState),
       });
     });
 
@@ -231,8 +256,8 @@ export default function ScoreKeeper() {
       scoreHistory: scoreHistory,
     })
       .then((result) => {
-        console.log("match saved in db");
-        sessionStorage.setItem("currentMatchId", result.id);
+        console.log("match saved in db", result.id);
+        currentMatchId = result.id;
       })
       .catch((err) => {
         console.log(err.message);
@@ -250,7 +275,7 @@ export default function ScoreKeeper() {
     const batch = writeBatch(db);
 
     // update matches collection doc
-    batch.update(doc(db, "matches", currentMatchId), {
+    batch.update(doc(db, "matches", currentMatchIdState), {
       winningTeam: { score: winningScore, team: winningTeam },
       losingTeam: { score: losingScore, team: losingTeam },
       tieGame: tieGame,
@@ -260,6 +285,8 @@ export default function ScoreKeeper() {
     // update users collection docs
     if (!tieGame) {
       team1LinkedUsers.map((user) => {
+        // call update game involvement to all linked users function
+        updateLinkedUsersEndGame();
         if (user.team === winningTeam) {
           if (losingScore < 62) {
             // skunked other team!
@@ -287,6 +314,8 @@ export default function ScoreKeeper() {
         }
       });
       team2LinkedUsers.map((user) => {
+        // call update game involvement to all linked users function
+        updateLinkedUsersEndGame();
         if (user.team === winningTeam) {
           if (losingScore < 62) {
             // skunked other team!
@@ -337,6 +366,7 @@ export default function ScoreKeeper() {
   }, []);
 
   const handleAddPoints = async (team, index) => {
+    console.log(currentMatchIdState, currentMatchId);
     // add score to score history if score hasn't been added yet for the team this round
     let teamValid = true;
     scoreHistory.map((score) => {
@@ -361,7 +391,7 @@ export default function ScoreKeeper() {
           index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
       }
 
-      if (currentRound >= 2) {
+      if (scoreHistory.length === 2) {
         // write score history to db's match doc
         let updatedScoreHistory = [
           ...scoreHistory,
@@ -375,8 +405,29 @@ export default function ScoreKeeper() {
             round: currentRound,
           },
         ];
-
+        await writeNewMatch();
+        await writeTeamsInvolved();
+        setCurrentMatchIdState(currentMatchId);
         await updateDoc(doc(db, "matches", `${currentMatchId}`), {
+          scoreHistory: updatedScoreHistory,
+        }).catch((err) => {
+          console.log(err.message);
+        });
+      } else if (scoreHistory.length > 2) {
+        // write score history to db's match doc
+        let updatedScoreHistory = [
+          ...scoreHistory,
+          {
+            team: team,
+            teamIndex: index,
+            scoreUpdate:
+              index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+            scoreEntry: scoreItemNum,
+            teamScoreTotal: newScoreTotal,
+            round: currentRound,
+          },
+        ];
+        await updateDoc(doc(db, "matches", `${currentMatchIdState}`), {
           scoreHistory: updatedScoreHistory,
         }).catch((err) => {
           console.log(err.message);
@@ -513,10 +564,6 @@ export default function ScoreKeeper() {
           return setCurrentRound(currentRound + 1);
         }
       }
-    }
-
-    if (scoreHistory.length === 2) {
-      writeNewMatch();
     }
   }, [scoreHistory]);
 

@@ -66,6 +66,7 @@ export default function InitialLogin() {
       tieGames: 0,
       uid: userId,
       matchesInvolvedIn: null,
+      matchesCompleted: null,
       beenSkunked: 0,
       skunkedOther: 0,
     }).catch((err) => {
