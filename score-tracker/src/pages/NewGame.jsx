@@ -56,13 +56,19 @@ export default function NewGame() {
           const arrayInvolved = doc.data().matchesInvolvedIn;
           const arrayComplete = doc.data().matchesCompleted;
 
-          arrayInvolved.map((match) => {
-            // go through and find ones not in completed array
-            const isComplete = arrayComplete.find((x) => x === match);
-            if (!isComplete) {
+          if (arrayComplete !== null && arrayComplete !== undefined) {
+            arrayInvolved.map((match) => {
+              // go through and find ones not in completed array
+              const isComplete = arrayComplete.find((x) => x === match);
+              if (!isComplete) {
+                inProgress.push(match);
+              }
+            });
+          } else {
+            arrayInvolved.map((match) => {
               inProgress.push(match);
-            }
-          });
+            });
+          }
         });
         setInProgressGames(inProgress);
       })
