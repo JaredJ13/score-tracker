@@ -70,8 +70,8 @@ export default function ScoreKeeper() {
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
   const [addTeam2Name, setAddTeam2Name] = useState("");
-  const [scoreInput, setScoreInput] = useState(0);
-  const [scoreInput2, setScoreInput2] = useState(0);
+  const [scoreInput, setScoreInput] = useState(null);
+  const [scoreInput2, setScoreInput2] = useState(null);
   const [editScoreInput, setEditScoreInput] = useState(0);
   const [team1LinkedUsers, setTeam1LinkedUsers] = useState([]);
   const [team2LinkedUsers, setTeam2LinkedUsers] = useState([]);
@@ -388,7 +388,7 @@ export default function ScoreKeeper() {
           index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
       }
 
-      if (scoreHistory.length === 2) {
+      if (scoreHistory.length === 1) {
         // write score history to db's match doc
         let updatedScoreHistory = [
           ...scoreHistory,
@@ -468,12 +468,12 @@ export default function ScoreKeeper() {
       chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal]);
       setChartData(chartDataArray);
       // set score input state again to update google chart
-      setScoreInput(0);
-      setScoreInput2(0);
+      setScoreInput(null);
+      setScoreInput2(null);
     } else {
       handleSnackBarWarning();
-      setScoreInput(0);
-      setScoreInput2(0);
+      setScoreInput(null);
+      setScoreInput2(null);
     }
   };
 
@@ -540,8 +540,8 @@ export default function ScoreKeeper() {
 
         setChartData(chartDataArray);
         // set score input state again to update google chart
-        setScoreInput(0);
-        setScoreInput2(0);
+        setScoreInput(null);
+        setScoreInput2(null);
 
         setEditScoreMode(false);
         // close modal
