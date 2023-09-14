@@ -75,14 +75,14 @@ export default function NewGame() {
 
   // inital render
   useEffect(() => {
-    // call get incomplete game data function
+    // call get incomplete game data function to get incomplete matchId's from current user
     getIncompleteMatches();
   }, []);
 
   // --------- HANDLERS -----------------
   const handleNewMatch = () => {
     // we don't write the new match to the db until first points are scored
-    navigate("/nerts");
+    navigate("/nerts", { state: { matchData: null, matchId: null } });
   };
   const handleContinueMatch = async (matchId) => {
     // get selected match id's data
@@ -90,7 +90,9 @@ export default function NewGame() {
     const docSnap = await getDoc(matchRef);
 
     if (docSnap.exists()) {
-      navigate("/nerts", { state: { matchData: docSnap.data() } });
+      navigate("/nerts", {
+        state: { matchData: docSnap.data(), matchId: docSnap.id },
+      });
     } else {
       console.log("no data returned");
     }
@@ -160,7 +162,7 @@ export default function NewGame() {
           </Paper>
           {/* end new game paper */}
           {/* continue game paper */}
-          <Paper sx={{ mt: 4 }} elevation={1}>
+          <Paper sx={{ mt: 4, mb: 10 }} elevation={1}>
             <Typography align="center" variant="h5" pt={2} color="default">
               Continue a Game
             </Typography>

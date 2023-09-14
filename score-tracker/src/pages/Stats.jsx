@@ -92,6 +92,24 @@ export default function Stats() {
               </Grid>
               <Grid item xs={12}>
                 <Typography align="center">
+                  <Chip
+                    color="info"
+                    sx={{ color: "#fff" }}
+                    label={"Wins: " + userData.wins}
+                  />
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography align="center">
+                  <Chip
+                    color="info"
+                    sx={{ color: "#fff" }}
+                    label={"Losses: " + userData.losses}
+                  />
+                </Typography>
+              </Grid>
+              <Grid item xs={12}>
+                <Typography align="center">
                   {isNaN(winLossRatio) === false ? (
                     <Chip
                       color="info"

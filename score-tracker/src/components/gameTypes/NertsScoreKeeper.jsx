@@ -70,8 +70,8 @@ export default function ScoreKeeper() {
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
   const [addTeam2Name, setAddTeam2Name] = useState("");
-  const [scoreInput, setScoreInput] = useState(null);
-  const [scoreInput2, setScoreInput2] = useState(null);
+  const [scoreInput, setScoreInput] = useState(undefined);
+  const [scoreInput2, setScoreInput2] = useState(undefined);
   const [editScoreInput, setEditScoreInput] = useState(0);
   const [team1LinkedUsers, setTeam1LinkedUsers] = useState([]);
   const [team2LinkedUsers, setTeam2LinkedUsers] = useState([]);
@@ -85,7 +85,6 @@ export default function ScoreKeeper() {
 
   // get data from useNavigate initialize navigate
   const location = useLocation();
-  // const continueMatchData = location.state.matchData;
   const navigate = useNavigate();
 
   let currentMatchId = 0;
@@ -253,7 +252,6 @@ export default function ScoreKeeper() {
       scoreHistory: scoreHistory,
     })
       .then((result) => {
-        console.log("match saved in db", result.id);
         currentMatchId = result.id;
       })
       .catch((err) => {
@@ -355,15 +353,90 @@ export default function ScoreKeeper() {
 
   // INITIAL RENDER
   useEffect(() => {
-    // get all user display names
-    getAllUsers();
-    // on component render force user to enter teams
-    // open modal
-    handleAddTeamModal();
+    if (
+      location.state.matchData != null &&
+      location.state.matchData != undefined &&
+      location.state.matchId != null &&
+      location.state.matchId != undefined
+    ) {
+      const continueMatchData = location.state.matchData;
+      const continueMatchId = location.state.matchId;
+      // set all necessary state to continue the game
+      // set teams, find which team is which for indexes
+      const teamForIndex0Index = continueMatchData.scoreHistory.findIndex(
+        (x) => x.teamIndex === 0
+      );
+      const teamForIndex0 =
+        continueMatchData.scoreHistory[teamForIndex0Index].team;
+      const teamForIndex1Index = continueMatchData.scoreHistory.findIndex(
+        (x) => x.teamIndex === 1
+      );
+      const teamForIndex1 =
+        continueMatchData.scoreHistory[teamForIndex1Index].team;
+      setTeams([teamForIndex0, teamForIndex1]);
+
+      // set scoreHistory
+      setScoreHistory([...continueMatchData.scoreHistory]);
+
+      // set currentRound
+      const lastIndex = continueMatchData.scoreHistory.length - 1;
+      setCurrentRound(continueMatchData.scoreHistory[lastIndex].round);
+
+      // set chartData, find last score for team index 0 and last score for team index 1
+      let teamIndex0Scores = [];
+      let teamIndex1Scores = [];
+      continueMatchData.scoreHistory.forEach((score) => {
+        if (score.teamIndex === 0) {
+          teamIndex0Scores.push(score);
+        }
+      });
+      continueMatchData.scoreHistory.forEach((score) => {
+        if (score.teamIndex === 1) {
+          teamIndex1Scores.push(score);
+        }
+      });
+      let lastScoreTeamIndex0 =
+        teamIndex0Scores[teamIndex0Scores.length - 1].teamScoreTotal;
+      let lastScoreTeamIndex1 =
+        teamIndex1Scores[teamIndex1Scores.length - 1].teamScoreTotal;
+
+      setChartData([
+        ...chartData,
+        [teamForIndex0, lastScoreTeamIndex0],
+        [teamForIndex1, lastScoreTeamIndex1],
+      ]);
+
+      // set current match id state
+      setCurrentMatchIdState(continueMatchId);
+
+      // set team1 & team2 linked users, loop through object because could be 2v2
+      for (const team in continueMatchData.teamsInvolved) {
+        let teamObject = continueMatchData.teamsInvolved[team];
+        let currentTeam = teamObject[0].team;
+        if (currentTeam == teamForIndex0) {
+          // loop through teams array
+          let arrayOfPlayers = continueMatchData.teamsInvolved[team];
+          arrayOfPlayers.map((player) => {
+            setTeam1LinkedUsers([...team1LinkedUsers, player]);
+          });
+        } else if (currentTeam == teamForIndex1) {
+          // loop through teams array
+          let arrayOfPlayers = continueMatchData.teamsInvolved[team];
+          arrayOfPlayers.map((player) => {
+            setTeam2LinkedUsers([...team2LinkedUsers, player]);
+          });
+        }
+      }
+    } else {
+      // get all user display names
+      getAllUsers();
+      // on component render force user to enter teams
+      // open modal
+      handleAddTeamModal();
+    }
   }, []);
 
   const handleAddPoints = async (team, index) => {
-    console.log(currentMatchIdState, currentMatchId);
     // add score to score history if score hasn't been added yet for the team this round
     let teamValid = true;
     scoreHistory.map((score) => {
@@ -468,12 +541,12 @@ export default function ScoreKeeper() {
       chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal]);
       setChartData(chartDataArray);
       // set score input state again to update google chart
-      setScoreInput(null);
-      setScoreInput2(null);
+      setScoreInput("");
+      setScoreInput2("");
     } else {
       handleSnackBarWarning();
-      setScoreInput(null);
-      setScoreInput2(null);
+      setScoreInput("");
+      setScoreInput2("");
     }
   };
 
@@ -540,8 +613,8 @@ export default function ScoreKeeper() {
 
         setChartData(chartDataArray);
         // set score input state again to update google chart
-        setScoreInput(null);
-        setScoreInput2(null);
+        setScoreInput("");
+        setScoreInput2("");
 
         setEditScoreMode(false);
         // close modal
