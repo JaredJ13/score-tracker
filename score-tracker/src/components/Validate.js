@@ -71,6 +71,62 @@ export const validateUserInput = (inputs) => {
         });
       }
     }
+    else if (input.type === "team1name") {
+      if (
+        input.value.trim("") === "" ||
+        input.value === null ||
+        input.value === undefined
+      ) {
+        validation.errors = true;
+        validation.errorMessages.push({
+          type: "team1name",
+          message: "Enter a team name",
+        });
+      }
+    }
+    else if (input.type === "team2name") {
+      let team1Name = inputs.find((x) => x.type === 'team1name')
+      if (
+        input.value.trim("") === "" ||
+        input.value === null ||
+        input.value === undefined
+      ) {
+        validation.errors = true;
+        validation.errorMessages.push({
+          type: "team2name",
+          message: "Enter a team name",
+        });
+      }
+      else if (input.value.trim() === team1Name.value.trim()) {
+        validation.errors = true;
+        validation.errorMessages.push({
+          type: "team2name",
+          message: "Team names can't be the same",
+        });
+      }
+    }
+    else if (input.type === "team1score") {
+      if (
+        isNaN(input.value)
+      ) {
+        validation.errors = true;
+        validation.errorMessages.push({
+          type: "team1score",
+          message: "Enter a number",
+        });
+      }
+    }
+    else if (input.type === "team2score") {
+      if (
+        isNaN(input.value)
+      ) {
+        validation.errors = true;
+        validation.errorMessages.push({
+          type: "team2score",
+          message: "Enter a number",
+        });
+      }
+    }
   });
 
   return validation;

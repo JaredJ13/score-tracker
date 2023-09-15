@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { auth } from "./firebase/FirebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
+import { createTheme, ThemeProvider } from "@mui/material";
 
 import NewGame from "./pages/NewGame";
 
@@ -15,6 +16,32 @@ import { useState } from "react";
 
 function App() {
   const [user, setUser] = useState(null);
+
+  // themes
+  const lightTheme = createTheme({
+    palette: {
+      mode: "light",
+      primary: {
+        main: "#7581c5",
+      },
+      secondary: {
+        main: "#f77d1a",
+      },
+      success: {
+        main: "#40c639",
+      },
+      info: {
+        main: "#96aaf9",
+      },
+      warning: {
+        main: "#ed6c02",
+      },
+      error: {
+        main: "#d64646",
+      },
+    },
+  });
+
   // keep track of auth state with an observer on auth object, so we can conditionally render our routes
   onAuthStateChanged(auth, (user) => {
     if (user) {
@@ -27,19 +54,21 @@ function App() {
 
   return (
     <>
-      {user === null ? (
-        <Routes>
-          <Route path="/" element={<InitialLogin />} />
-        </Routes>
-      ) : (
-        <Routes>
-          <Route path="/" element={<InitialLogin />} />
-          <Route path="stats" element={<Stats />} />
-          <Route path="match" element={<NewGame />} />
-          <Route path="account" element={<Account />} />
-          <Route path="nerts" element={<NertsScoreTracker />} />
-        </Routes>
-      )}
+      <ThemeProvider theme={lightTheme}>
+        {user === null ? (
+          <Routes>
+            <Route path="/" element={<InitialLogin />} />
+          </Routes>
+        ) : (
+          <Routes>
+            <Route path="/" element={<InitialLogin />} />
+            <Route path="stats" element={<Stats />} />
+            <Route path="match" element={<NewGame />} />
+            <Route path="account" element={<Account />} />
+            <Route path="nerts" element={<NertsScoreTracker />} />
+          </Routes>
+        )}
+      </ThemeProvider>
     </>
   );
 }

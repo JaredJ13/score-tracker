@@ -20,8 +20,8 @@ import {
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { addDoc, collection } from "firebase/firestore";
-import { validateUserInput } from "../components/validate";
-import { renderAlert } from "../components/alerts";
+import { validateUserInput } from "../components/Validate";
+import { renderAlert } from "../components/Alerts";
 
 export default function InitialLogin() {
   // state

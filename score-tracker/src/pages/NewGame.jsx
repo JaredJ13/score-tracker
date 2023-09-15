@@ -7,8 +7,8 @@ import {
   CardContent,
   Container,
   FormControl,
+  FormHelperText,
   Grid,
-  IconButton,
   InputLabel,
   MenuItem,
   Paper,
@@ -18,8 +18,6 @@ import {
 import { db, auth } from "../firebase/FirebaseConfig";
 import {
   collection,
-  Timestamp,
-  addDoc,
   where,
   query,
   getDocs,
@@ -37,7 +35,12 @@ export default function NewGame() {
   // state
   const [gameType, setGameType] = useState("");
   const [inProgressGames, setInProgressGames] = useState([]);
-  const [continueMatchData, setContinueMatchData] = useState([]);
+
+  // error state
+  const [selectGameError, setSelectGameError] = useState({
+    error: false,
+    message: "",
+  });
 
   // init use nav
   const navigate = useNavigate();
@@ -87,8 +90,13 @@ export default function NewGame() {
 
   // --------- HANDLERS -----------------
   const handleNewMatch = () => {
-    // we don't write the new match to the db until first points are scored
-    navigate("/nerts", { state: { matchData: null, matchId: null } });
+    if (gameType === null || gameType === "" || gameType === undefined) {
+      setSelectGameError({ error: true, message: "Select a game type" });
+    } else {
+      setSelectGameError({ error: false, message: "" });
+      // we don't write the new match to the db until first points are scored
+      navigate(`/${gameType}`, { state: { matchData: null, matchId: null } });
+    }
   };
   const handleContinueMatch = async (matchId) => {
     // get selected match id's data
@@ -143,6 +151,8 @@ export default function NewGame() {
                     Game Type
                   </InputLabel>
                   <Select
+                    error={selectGameError.error}
+                    help
                     labelId="game-type-select-label"
                     value={gameType}
                     label="Game Type *"
@@ -151,6 +161,9 @@ export default function NewGame() {
                   >
                     <MenuItem value="nerts">Nerts</MenuItem>
                   </Select>
+                  <FormHelperText sx={{ color: "#d64646" }}>
+                    {selectGameError.error ? selectGameError.message : ""}
+                  </FormHelperText>
                 </FormControl>
               </Grid>
               <Grid item>

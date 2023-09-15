@@ -36,6 +36,8 @@ import {
   arrayUnion,
   addDoc,
 } from "firebase/firestore";
+import { validateUserInput } from "../Validate";
+import { renderAlert } from "../Alerts";
 
 import Layout from "../global/Layout";
 
@@ -83,6 +85,19 @@ export default function ScoreKeeper() {
   const [editScoreData, setEditScoreData] = useState(null);
   const [winnerDialogModalOpen, setWinnerDialogModalOpen] = useState(false);
 
+  // error state
+  const [team1Error, setTeam1Error] = useState({ error: false, message: "" });
+  const [team2Error, setTeam2Error] = useState({ error: false, message: "" });
+  const [team1ScoreError, setTeam1ScoreError] = useState({
+    error: false,
+    message: "",
+  });
+  const [team2ScoreError, setTeam2ScoreError] = useState({
+    error: false,
+    message: "",
+  });
+  const [alert, setAlert] = useState({ alert: false, message: "", type: "" });
+
   // get data from useNavigate initialize navigate
   const location = useLocation();
   const navigate = useNavigate();
@@ -123,26 +138,49 @@ export default function ScoreKeeper() {
   };
 
   const handleAddNewTeam = async () => {
-    setChartData([...chartData, [addTeam1Name, 0], [addTeam2Name, 0]]);
-    setTeams([...teams, addTeam1Name, addTeam2Name]);
+    // validate user input
+    let valid = validateUserInput([
+      { type: "team1name", value: addTeam1Name },
+      { type: "team2name", value: addTeam2Name },
+    ]);
+    setTeam1Error({ error: false, message: "" });
+    setTeam2Error({ error: false, message: "" });
+    if (valid.errors) {
+      // go through and set state for appropiate input errors
+      valid.errorMessages.map((error) => {
+        if (error.type === "team1name") {
+          setTeam1Error({ error: true, message: error.message });
+        }
+        if (error.type === "team2name") {
+          setTeam2Error({ error: true, message: error.message });
+        }
+      });
+    } else {
+      setTeam1Error({ error: false, message: "" });
+      setTeam2Error({ error: false, message: "" });
 
-    // add team name to each linked user data
-    let linkedUsers1 = [];
-    team1LinkedUsers.map((user) => {
-      let updatedUser = user;
-      updatedUser["team"] = addTeam1Name;
-      linkedUsers1.push(updatedUser);
-    });
-    setTeam1LinkedUsers([...linkedUsers1]);
+      setChartData([...chartData, [addTeam1Name, 0], [addTeam2Name, 0]]);
+      setTeams([...teams, addTeam1Name, addTeam2Name]);
 
-    let linkedUsers2 = [];
-    team2LinkedUsers.map((user) => {
-      let updatedUser = user;
-      updatedUser["team"] = addTeam2Name;
-      linkedUsers2.push(updatedUser);
-    });
-    setTeam2LinkedUsers([...linkedUsers2]);
-    handleAddTeamModal();
+      // add team name to each linked user data
+      let linkedUsers1 = [];
+      team1LinkedUsers.map((user) => {
+        let updatedUser = user;
+        updatedUser["team"] = addTeam1Name;
+        linkedUsers1.push(updatedUser);
+      });
+      setTeam1LinkedUsers([...linkedUsers1]);
+
+      let linkedUsers2 = [];
+      team2LinkedUsers.map((user) => {
+        let updatedUser = user;
+        updatedUser["team"] = addTeam2Name;
+        linkedUsers2.push(updatedUser);
+      });
+      setTeam2LinkedUsers([...linkedUsers2]);
+      handleAddTeamModal();
+      setAlert({ alert: true, message: "Match initiated", type: "success" });
+    }
   };
 
   const handleTeam1LinkUsers = (event, values) => {
@@ -253,6 +291,12 @@ export default function ScoreKeeper() {
     })
       .then((result) => {
         currentMatchId = result.id;
+        setAlert({
+          type: "success",
+          alert: true,
+          message:
+            "Match saved to database and will continue to save updates as you enter new scores",
+        });
       })
       .catch((err) => {
         console.log(err.message);
@@ -345,6 +389,11 @@ export default function ScoreKeeper() {
         // disable inputs and add point buttons because match is over
         setDisableAddPointRelatives(true);
         handleWinnerDialogModal();
+        setAlert({
+          type: "success",
+          alert: true,
+          message: `Win saved to database, all linked user${"'"}s stats updated.`,
+        });
       })
       .catch((err) => {
         console.log(err);
@@ -437,116 +486,137 @@ export default function ScoreKeeper() {
   }, []);
 
   const handleAddPoints = async (team, index) => {
-    // add score to score history if score hasn't been added yet for the team this round
-    let teamValid = true;
-    scoreHistory.map((score) => {
-      if (score.team === team && score.round === currentRound) {
-        teamValid = false;
-      }
-    });
-    if (teamValid) {
-      let scoreItemNum = scoreHistory.length;
-      let newScoreTotal = 0;
-      // calc new score total
-      if (scoreHistory.length > 0 && scoreHistory.length !== undefined) {
-        scoreHistory.map((score) => {
-          if (score.team === team) {
-            newScoreTotal += score.scoreUpdate;
-          }
-        });
-        newScoreTotal +=
-          index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
-      } else {
-        newScoreTotal =
-          index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
-      }
-
-      if (scoreHistory.length === 1) {
-        // write score history to db's match doc
-        let updatedScoreHistory = [
-          ...scoreHistory,
-          {
-            team: team,
-            teamIndex: index,
-            scoreUpdate:
-              index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
-            scoreEntry: scoreItemNum,
-            teamScoreTotal: newScoreTotal,
-            round: currentRound,
-          },
-        ];
-        await writeNewMatch();
-        await writeTeamsInvolved();
-        // call update game involvement to all linked users function
-        await updateLinkedUsersStartGame();
-        setCurrentMatchIdState(currentMatchId);
-        await updateDoc(doc(db, "matches", `${currentMatchId}`), {
-          scoreHistory: updatedScoreHistory,
-        }).catch((err) => {
-          console.log(err.message);
-        });
-      } else if (scoreHistory.length > 2) {
-        // write score history to db's match doc
-        let updatedScoreHistory = [
-          ...scoreHistory,
-          {
-            team: team,
-            teamIndex: index,
-            scoreUpdate:
-              index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
-            scoreEntry: scoreItemNum,
-            teamScoreTotal: newScoreTotal,
-            round: currentRound,
-          },
-        ];
-        await updateDoc(doc(db, "matches", `${currentMatchIdState}`), {
-          scoreHistory: updatedScoreHistory,
-        }).catch((err) => {
-          console.log(err.message);
-        });
-      }
-
-      setScoreHistory([
-        ...scoreHistory,
-        {
-          team: team,
-          teamIndex: index,
-          scoreUpdate:
-            index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
-          scoreEntry: scoreItemNum,
-          teamScoreTotal: newScoreTotal,
-          round: currentRound,
-        },
-      ]);
-      // set total score state for specific team
-      if (index === 0) {
-        setTeam1CurrentTotalScore(newScoreTotal);
-      } else {
-        setTeam2CurrentTotalScore(newScoreTotal);
-      }
-
-      // set last score state
-      let opposingTeam = teams.find((x) => x !== team);
-      setLastScore({
-        team: team,
-        teamScoreTotal: newScoreTotal,
-        opposingTeam: opposingTeam,
-        round: currentRound,
+    // validate user input
+    let valid;
+    if (index === 0) {
+      valid = validateUserInput([{ type: "team1score", value: scoreInput }]);
+    } else if (index === 1) {
+      valid = validateUserInput([{ type: "team2score", value: scoreInput2 }]);
+    }
+    setTeam1ScoreError({ error: false, message: "" });
+    setTeam2ScoreError({ error: false, message: "" });
+    if (valid.errors) {
+      // go through and set state for appropiate input errors
+      valid.errorMessages.map((error) => {
+        if (error.type === "team1score") {
+          setTeam1ScoreError({ error: true, message: error.message });
+        }
+        if (error.type === "team2score") {
+          setTeam2ScoreError({ error: true, message: error.message });
+        }
       });
-      // input current score into chart data
-      let chartDataArray = chartData;
-      let scoreIndex = chartDataArray.findIndex(
-        (element) => element[0] === teams[index]
-      );
-      chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal]);
-      setChartData(chartDataArray);
-      // set score input state again to update google chart
-      setScoreInput("");
-      setScoreInput2("");
     } else {
-      handleSnackBarWarning();
-      setScoreInput("");
-      setScoreInput2("");
+      // add score to score history if score hasn't been added yet for the team this round
+      let teamValid = true;
+      scoreHistory.map((score) => {
+        if (score.team === team && score.round === currentRound) {
+          teamValid = false;
+        }
+      });
+      if (teamValid) {
+        let scoreItemNum = scoreHistory.length;
+        let newScoreTotal = 0;
+        // calc new score total
+        if (scoreHistory.length > 0 && scoreHistory.length !== undefined) {
+          scoreHistory.map((score) => {
+            if (score.team === team) {
+              newScoreTotal += score.scoreUpdate;
+            }
+          });
+          newScoreTotal +=
+            index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
+        } else {
+          newScoreTotal =
+            index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
+        }
+
+        if (scoreHistory.length === 1) {
+          // write score history to db's match doc
+          let updatedScoreHistory = [
+            ...scoreHistory,
+            {
+              team: team,
+              teamIndex: index,
+              scoreUpdate:
+                index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+              scoreEntry: scoreItemNum,
+              teamScoreTotal: newScoreTotal,
+              round: currentRound,
+            },
+          ];
+          await writeNewMatch();
+          await writeTeamsInvolved();
+          // call update game involvement to all linked users function
+          await updateLinkedUsersStartGame();
+          setCurrentMatchIdState(currentMatchId);
+          await updateDoc(doc(db, "matches", `${currentMatchId}`), {
+            scoreHistory: updatedScoreHistory,
+          }).catch((err) => {
+            console.log(err.message);
+          });
+        } else if (scoreHistory.length > 2) {
+          // write score history to db's match doc
+          let updatedScoreHistory = [
+            ...scoreHistory,
+            {
+              team: team,
+              teamIndex: index,
+              scoreUpdate:
+                index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+              scoreEntry: scoreItemNum,
+              teamScoreTotal: newScoreTotal,
+              round: currentRound,
+            },
+          ];
+          await updateDoc(doc(db, "matches", `${currentMatchIdState}`), {
+            scoreHistory: updatedScoreHistory,
+          }).catch((err) => {
+            console.log(err.message);
+          });
+        }
+
+        setScoreHistory([
+          ...scoreHistory,
+          {
+            team: team,
+            teamIndex: index,
+            scoreUpdate:
+              index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+            scoreEntry: scoreItemNum,
+            teamScoreTotal: newScoreTotal,
+            round: currentRound,
+          },
+        ]);
+        // set total score state for specific team
+        if (index === 0) {
+          setTeam1CurrentTotalScore(newScoreTotal);
+        } else {
+          setTeam2CurrentTotalScore(newScoreTotal);
+        }
+
+        // set last score state
+        let opposingTeam = teams.find((x) => x !== team);
+        setLastScore({
+          team: team,
+          teamScoreTotal: newScoreTotal,
+          opposingTeam: opposingTeam,
+          round: currentRound,
+        });
+        // input current score into chart data
+        let chartDataArray = chartData;
+        let scoreIndex = chartDataArray.findIndex(
+          (element) => element[0] === teams[index]
+        );
+        chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal]);
+        setChartData(chartDataArray);
+        // set score input state again to update google chart
+        setScoreInput("");
+        setScoreInput2("");
+      } else {
+        handleSnackBarWarning();
+        setScoreInput("");
+        setScoreInput2("");
+      }
     }
   };
 
@@ -709,10 +779,10 @@ export default function ScoreKeeper() {
     <>
       <Layout>
         <Container sx={{ mb: 4 }}>
-          <IconButton sx={{ mt: 2 }} onClick={() => navigate("/match")}>
+          <IconButton sx={{ mt: 1 }} onClick={() => navigate("/match")}>
             <KeyboardBackspaceOutlinedIcon />
           </IconButton>
-          <Paper square sx={{ pb: 4, mt: 3 }}>
+          <Paper square sx={{ pb: 4, mt: 1 }}>
             {teams.length >= 1 && teams.length !== undefined ? (
               <>
                 <Chart
@@ -758,10 +828,7 @@ export default function ScoreKeeper() {
             ) : (
               <Grid item></Grid>
             )}
-          </Paper>
-          <Divider sx={{ mt: 4 }}>Enter Scores</Divider>
-          <Paper sx={{ my: 4, pb: 4 }} square>
-            <Grid container justifyContent="center" rowSpacing={2}>
+            <Grid container justifyContent="center" rowSpacing={2} mt={2}>
               {teams.length === 0 || teams.length === undefined ? (
                 <Grid item>
                   <Button
@@ -777,9 +844,17 @@ export default function ScoreKeeper() {
                 ""
               )}
               <Dialog open={addTeamModalOpen} onClose={handleAddTeamModal}>
-                <DialogTitle>Input the Matches Team Names</DialogTitle>
+                <DialogTitle sx={{ minWidth: "30rem" }}>Team Setup</DialogTitle>
                 <DialogContent>
+                  <Divider
+                    textAlign="left"
+                    sx={{ mt: 2, color: "#96aaf9", fontSize: "14px" }}
+                  >
+                    Team 1
+                  </Divider>
                   <TextField
+                    error={team1Error.error}
+                    helperText={team1Error.error ? team1Error.message : ""}
                     autoFocus
                     margin="dense"
                     id="new-team-name"
@@ -805,7 +880,15 @@ export default function ScoreKeeper() {
                       />
                     )}
                   />
+                  <Divider
+                    textAlign="left"
+                    sx={{ mt: 4, color: "#96aaf9", fontSize: "14px" }}
+                  >
+                    Team 2
+                  </Divider>
                   <TextField
+                    error={team2Error.error}
+                    helperText={team2Error.error ? team2Error.message : ""}
                     margin="dense"
                     id="new-team-name"
                     label="Team 2 Name"
@@ -867,8 +950,19 @@ export default function ScoreKeeper() {
                         alignItems="center"
                         key={index}
                       >
+                        <Grid item xs={12} mb={2}>
+                          <Divider textAlign="left" sx={{ fontSize: "10px" }}>
+                            Enter Scores
+                          </Divider>
+                        </Grid>
                         <Grid item xs={6}>
                           <TextField
+                            error={team1ScoreError.error}
+                            helperText={
+                              team1ScoreError.error
+                                ? team1ScoreError.message
+                                : ""
+                            }
                             id="outlined-basic"
                             label={team}
                             variant="outlined"
@@ -903,6 +997,12 @@ export default function ScoreKeeper() {
                       >
                         <Grid item xs={6}>
                           <TextField
+                            error={team2ScoreError.error}
+                            helperText={
+                              team2ScoreError.error
+                                ? team2ScoreError.message
+                                : ""
+                            }
                             id="outlined-basic"
                             label={team}
                             variant="outlined"
@@ -940,7 +1040,7 @@ export default function ScoreKeeper() {
               )}
             </Grid>
           </Paper>
-          <Divider>Score History</Divider>
+          <Divider sx={{ mt: 4 }}>Score History</Divider>
           <Typography align="center" variant="body2" sx={{ mb: 4 }}>
             Score entries from Newest to Oldest
           </Typography>
@@ -950,6 +1050,7 @@ export default function ScoreKeeper() {
             direction="column-reverse"
             xs={12}
             rowGap={2}
+            mb={10}
           >
             {scoreHistory.map((score) => {
               return (
@@ -981,6 +1082,7 @@ export default function ScoreKeeper() {
                           </Grid>
                           <Grid item xs={4}>
                             <Button
+                              disabled={disableAddPointRelatives}
                               variant="contained"
                               color="info"
                               endIcon={<EditIcon />}
@@ -1074,6 +1176,9 @@ export default function ScoreKeeper() {
             ""
           )}
           {/* winner alert dialog end */}
+          {/* snackbar alert */}
+          {alert.alert ? renderAlert(alert.type, alert.message, setAlert) : ""}
+          {/* snackbar alert end */}
         </Container>
       </Layout>
     </>
