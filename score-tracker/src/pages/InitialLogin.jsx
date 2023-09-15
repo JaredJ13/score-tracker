@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -20,6 +20,8 @@ import {
 } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { addDoc, collection } from "firebase/firestore";
+import { validateUserInput } from "../components/validate";
+import { renderAlert } from "../components/alerts";
 
 export default function InitialLogin() {
   // state
@@ -28,6 +30,37 @@ export default function InitialLogin() {
   const [signupEmail, setSignupEmail] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupUsername, setSignupUsername] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  // error handling
+  const [emailErrorLogin, setEmailErrorLogin] = useState({
+    error: false,
+    message: "",
+  });
+  const [passwordErrorLogin, setPasswordErrorLogin] = useState({
+    error: false,
+    message: "",
+  });
+  const [emailErrorSignup, setEmailErrorSignup] = useState({
+    error: false,
+    message: "",
+  });
+  const [passwordErrorSignup, setPasswordErrorSignup] = useState({
+    error: false,
+    message: "",
+  });
+  const [usernameErrorSignup, setUsernameErrorSignup] = useState({
+    error: false,
+    message: "",
+  });
+  const [confirmPasswordError, setConfirmPasswordError] = useState({
+    error: false,
+    message: "",
+  });
+  const [firestoreError, setFirestoreError] = useState({
+    error: false,
+    message: "",
+  });
 
   // themes
   const lightTheme = createTheme({
@@ -57,7 +90,7 @@ export default function InitialLogin() {
   // declare use nav
   const navigate = useNavigate();
 
-  // db functions
+  // DB FUNCTIONS
   const writeNewUser = async (userId) => {
     await addDoc(collection(db, "appUsers"), {
       displayName: signupUsername,
@@ -74,49 +107,111 @@ export default function InitialLogin() {
     });
   };
 
+  // HANDLERS
+
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    // attempt to sign in user
-    signInWithEmailAndPassword(auth, loginEmail, loginPassword)
-      .then((userCredential) => {
-        let user = userCredential.user;
-        // store user id in session storage
-        sessionStorage.setItem("currentUserId", user.uid);
-        if (user) {
-          navigate("/stats");
+    // validate user input
+    let valid = validateUserInput([
+      { type: "email", value: loginEmail },
+      { type: "password", value: loginPassword },
+    ]);
+    setEmailErrorLogin({ error: false, message: "" });
+    setPasswordErrorLogin({ error: false, message: "" });
+    if (valid.errors) {
+      // go through and set state for appropiate input errors
+      valid.errorMessages.map((error) => {
+        if (error.type === "email") {
+          setEmailErrorLogin({ error: true, message: error.message });
         }
-      })
-      .catch((err) => {
-        console.log(err.message);
+        if (error.type === "password") {
+          setPasswordErrorLogin({ error: true, message: error.message });
+        }
       });
-  };
+    } else {
+      setEmailErrorLogin({ error: false, message: "" });
+      setPasswordErrorLogin({ error: false, message: "" });
 
-  const handleSignupSubmit = async (e) => {
-    e.preventDefault();
-    // attempt to create new user account
-    createUserWithEmailAndPassword(auth, signupEmail, signupPassword).then(
-      (userCredential) => {
-        let user = userCredential.user;
-        if (user) {
+      // attempt to sign in user
+      signInWithEmailAndPassword(auth, loginEmail, loginPassword)
+        .then((userCredential) => {
           let user = userCredential.user;
-          // update users auth displayname
-          updateProfile(auth.currentUser, {
-            displayName: signupUsername,
-          }).catch((err) => {
-            console.log(err.message);
-          });
-          // write user to appUsers collection
-          writeNewUser(user.uid);
-          // send email verification to user
-          sendEmailVerification(auth.currentUser);
           // store user id in session storage
           sessionStorage.setItem("currentUserId", user.uid);
           if (user) {
             navigate("/stats");
           }
+        })
+        .catch((err) => {
+          console.log(err.message);
+          setFirestoreError({ error: true, message: err.message });
+        });
+    }
+  };
+
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+    // validate user input
+    let valid = validateUserInput([
+      { type: "email", value: signupEmail },
+      { type: "password", value: signupPassword },
+      { type: "username", value: signupUsername },
+      { type: "confirmPassword", value: confirmPassword },
+    ]);
+    setEmailErrorSignup({ error: false, message: "" });
+    setPasswordErrorSignup({ error: false, message: "" });
+    setConfirmPasswordError({ error: false, message: "" });
+    setUsernameErrorSignup({ error: false, message: "" });
+    if (valid.errors) {
+      // go through and set state for appropiate input errors
+      valid.errorMessages.map((error) => {
+        if (error.type === "email") {
+          setEmailErrorSignup({ error: true, message: error.message });
         }
-      }
-    );
+        if (error.type === "password") {
+          setPasswordErrorSignup({ error: true, message: error.message });
+        }
+        if (error.type === "confirmPassword") {
+          setConfirmPasswordError({ error: true, message: error.message });
+        }
+        if (error.type === "username") {
+          setUsernameErrorSignup({ error: true, message: error.message });
+        }
+      });
+    } else {
+      setEmailErrorSignup({ error: false, message: "" });
+      setPasswordErrorSignup({ error: false, message: "" });
+      setConfirmPasswordError({ error: false, message: "" });
+      setUsernameErrorSignup({ error: false, message: "" });
+
+      // attempt to create new user account
+      createUserWithEmailAndPassword(auth, signupEmail, signupPassword)
+        .then((userCredential) => {
+          let user = userCredential.user;
+          if (user) {
+            let user = userCredential.user;
+            // update users auth displayname
+            updateProfile(auth.currentUser, {
+              displayName: signupUsername,
+            }).catch((err) => {
+              console.log(err.message);
+            });
+            // write user to appUsers collection
+            writeNewUser(user.uid);
+            // send email verification to user
+            sendEmailVerification(auth.currentUser);
+            // store user id in session storage
+            sessionStorage.setItem("currentUserId", user.uid);
+            if (user) {
+              navigate("/stats");
+            }
+          }
+        })
+        .catch((err) => {
+          console.log(err.message);
+          setFirestoreError({ error: true, message: err.message });
+        });
+    }
   };
 
   return (
@@ -138,20 +233,30 @@ export default function InitialLogin() {
                 <Grid item xs={10}>
                   <FormControl sx={{ width: "100%" }}>
                     <TextField
+                      error={emailErrorLogin.error}
+                      helperText={
+                        emailErrorLogin.error ? emailErrorLogin.message : ""
+                      }
                       label="Email"
                       variant="outlined"
-                      type="email"
-                      onChange={(e) => setLoginEmail(e.target.value)}
+                      type="text"
+                      onChange={(e) => setLoginEmail(e.target.value.trim())}
                     />
                   </FormControl>
                 </Grid>
                 <Grid item xs={10}>
                   <FormControl sx={{ width: "100%" }}>
                     <TextField
+                      error={passwordErrorLogin.error}
+                      helperText={
+                        passwordErrorLogin.error
+                          ? passwordErrorLogin.message
+                          : ""
+                      }
                       label="Password"
                       variant="outlined"
                       type="password"
-                      onChange={(e) => setLoginPassword(e.target.value)}
+                      onChange={(e) => setLoginPassword(e.target.value.trim())}
                     />
                   </FormControl>
                 </Grid>
@@ -184,30 +289,64 @@ export default function InitialLogin() {
                 <Grid item xs={10}>
                   <FormControl sx={{ width: "100%" }}>
                     <TextField
+                      error={emailErrorSignup.error}
+                      helperText={
+                        emailErrorSignup.error ? emailErrorSignup.message : ""
+                      }
                       label="Email"
                       variant="outlined"
-                      type="email"
-                      onChange={(e) => setSignupEmail(e.target.value)}
+                      type="text"
+                      onChange={(e) => setSignupEmail(e.target.value.trim())}
                     />
                   </FormControl>
                 </Grid>
                 <Grid item xs={10}>
                   <FormControl sx={{ width: "100%" }}>
                     <TextField
+                      error={usernameErrorSignup.error}
+                      helperText={
+                        usernameErrorSignup.error
+                          ? usernameErrorSignup.message
+                          : ""
+                      }
                       label="Username"
                       variant="outlined"
                       type="text"
-                      onChange={(e) => setSignupUsername(e.target.value)}
+                      onChange={(e) => setSignupUsername(e.target.value.trim())}
                     />
                   </FormControl>
                 </Grid>
                 <Grid item xs={10}>
                   <FormControl sx={{ width: "100%" }}>
                     <TextField
+                      error={passwordErrorSignup.error}
+                      helperText={
+                        passwordErrorSignup.error
+                          ? passwordErrorSignup.message
+                          : ""
+                      }
                       label="Password"
                       variant="outlined"
                       type="password"
-                      onChange={(e) => setSignupPassword(e.target.value)}
+                      onChange={(e) => setSignupPassword(e.target.value.trim())}
+                    />
+                  </FormControl>
+                </Grid>
+                <Grid item xs={10}>
+                  <FormControl sx={{ width: "100%" }}>
+                    <TextField
+                      error={confirmPasswordError.error}
+                      helperText={
+                        confirmPasswordError.error
+                          ? confirmPasswordError.message
+                          : ""
+                      }
+                      label="Confirm Password"
+                      variant="outlined"
+                      type="password"
+                      onChange={(e) =>
+                        setConfirmPassword(e.target.value.trim())
+                      }
                     />
                   </FormControl>
                 </Grid>
@@ -224,6 +363,9 @@ export default function InitialLogin() {
               </Grid>
             </Box>
           </Paper>
+          {firestoreError.error
+            ? renderAlert("error", firestoreError.message, setFirestoreError)
+            : ""}
         </Container>
       </ThemeProvider>
     </>
