@@ -6,6 +6,7 @@ import {
   Chip,
   Divider,
 } from "@mui/material";
+import { PieChart } from "@mui/x-charts/PieChart";
 import { auth, db } from "../firebase/FirebaseConfig";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { useEffect, useState } from "react";
@@ -61,12 +62,59 @@ export default function Stats() {
     } else if (wlRatio === Infinity && userData.losses > 0) {
       setWinLossRatio(0);
     } else {
-      setWinLossRatio(wlRatio);
+      setWinLossRatio(wlRatio.toFixed(1));
     }
-    setWinRate(winRate);
+    setWinRate(winRate.toFixed(2));
     setNumGamesPlayed(numGames);
     setUserName(userName);
   }, [userData]);
+
+  // render pie chart
+  const renderPieChart = () => {
+    let data = [
+      { label: "Wins", value: userData.wins, color: "#6dc972" },
+      {
+        label: "Skunked",
+        value: userData.skunkedOther,
+        color: "#6dc972",
+      },
+      { label: "Losses", value: userData.losses, color: "#d62822" },
+      { label: "Been Skunked", value: userData.beenSkunked, color: "#d62822" },
+    ];
+
+    return (
+      <PieChart
+        margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
+        series={[
+          {
+            startAngle: -90,
+            endAngle: 90,
+            data,
+            paddingAngle: 0,
+            cornerRadius: 4,
+            innerRadius: 0,
+          },
+        ]}
+        legend={{
+          direction: "row",
+          position: {
+            vertical: "top",
+            horizontal: "middle",
+          },
+        }}
+        sx={{
+          "--ChartsLegend-rootOffsetX": "-7px",
+          "--ChartsLegend-rootOffsetY": "170px",
+          "--ChartsLegend-itemWidth": "60px",
+          "--ChartsLegend-itemMarkSize": "7px",
+          "--ChartsLegend-labelSpacing": "2px",
+          "--ChartsLegend-rootSpacing": "-2px",
+        }}
+        height={300}
+        // width={200}
+      />
+    );
+  };
 
   return (
     <>
@@ -82,92 +130,134 @@ export default function Stats() {
             >
               Stats
             </Typography>
+            <Typography
+              align="center"
+              variant="h4"
+              pt={2}
+              sx={{ fontWeight: "bold" }}
+            >
+              {userName}
+            </Typography>
           </Paper>
-          <Paper>
-            <Grid container justifyContent="center" rowGap={2}>
-              <Grid item xs={12}>
-                <Typography align="center" variant="h4" pt={2}>
-                  {userName}
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography align="center">
-                  <Chip
-                    color="info"
-                    sx={{ color: "#fff" }}
-                    label={"Wins: " + userData.wins}
-                  />
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography align="center">
-                  <Chip
-                    color="info"
-                    sx={{ color: "#fff" }}
-                    label={"Losses: " + userData.losses}
-                  />
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography align="center">
-                  {isNaN(winLossRatio) === false ? (
-                    <Chip
-                      color="info"
-                      sx={{ color: "#fff" }}
-                      label={"Win/Loss Ratio: " + winLossRatio}
-                    />
-                  ) : (
-                    <Chip color="info" sx={{ color: "#fff" }} label="0" />
-                  )}
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography align="center">
-                  <Chip
-                    color="info"
-                    sx={{ color: "#fff" }}
-                    label={"Win Rate: " + winRate + "%"}
-                  />
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography align="center">
-                  <Chip
-                    color="info"
-                    sx={{ color: "#fff" }}
-                    label={"# of Draws: " + userData.tieGames}
-                  />
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography align="center">
-                  <Chip
-                    color="info"
-                    sx={{ color: "#fff" }}
-                    label={"Other Players Skunked: " + userData.skunkedOther}
-                  />
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography align="center">
-                  <Chip
-                    color="info"
-                    sx={{ color: "#fff" }}
-                    label={"Been Skunked: " + userData.beenSkunked}
-                  />
-                </Typography>
-              </Grid>
-              <Grid item xs={12}>
-                <Typography align="center" pb={2}>
-                  <Chip
-                    color="info"
-                    sx={{ color: "#fff" }}
-                    label={"Games Completed: " + numGamesPlayed}
-                  />
-                </Typography>
-              </Grid>
+          {userData !== undefined && userData !== null ? renderPieChart() : ""}
+          <Divider sx={{ mt: "-95px", mb: 2 }}></Divider>
+          <Grid container justifyContent="space-around" rowGap={2}>
+            <Grid item xs={4}>
+              <Typography align="center">
+                <Chip
+                  sx={{
+                    color: "#aae772",
+                    backgroundColor: "#383535",
+                    fontWeight: "bold",
+                    width: "100%",
+                  }}
+                  label={"Wins: " + userData.wins}
+                />
+              </Typography>
             </Grid>
-          </Paper>
+            <Grid item xs={4}>
+              <Typography align="center">
+                <Chip
+                  color="info"
+                  sx={{
+                    color: "#ff5757",
+                    backgroundColor: "#383535",
+                    fontWeight: "bold",
+                    width: "100%",
+                  }}
+                  label={"Losses: " + userData.losses}
+                />
+              </Typography>
+            </Grid>
+            <Grid item xs={10}>
+              <Typography align="center">
+                {isNaN(winLossRatio) === false ? (
+                  <Chip
+                    color="info"
+                    sx={{
+                      color: "#aae772",
+                      backgroundColor: "#383535",
+                      fontWeight: "bold",
+                      width: "100%",
+                    }}
+                    label={"Win/Loss Ratio: " + winLossRatio}
+                  />
+                ) : (
+                  <Chip color="info" sx={{ color: "#fff" }} label="0" />
+                )}
+              </Typography>
+            </Grid>
+            <Grid item xs={10}>
+              <Typography align="center">
+                <Chip
+                  color="info"
+                  sx={{
+                    color: "#aae772",
+                    backgroundColor: "#383535",
+                    fontWeight: "bold",
+                    width: "100%",
+                  }}
+                  label={"Win Rate: " + winRate + "%"}
+                />
+              </Typography>
+            </Grid>
+            <Grid item xs={10}>
+              <Typography align="center">
+                <Chip
+                  color="info"
+                  sx={{
+                    color: "#aae772",
+                    backgroundColor: "#383535",
+                    fontWeight: "bold",
+                    width: "100%",
+                  }}
+                  label={"Other Players Skunked: " + userData.skunkedOther}
+                />
+              </Typography>
+            </Grid>
+            <Grid item xs={10}>
+              <Typography align="center">
+                <Chip
+                  color="info"
+                  sx={{
+                    color: "#ff5757",
+                    backgroundColor: "#383535",
+                    fontWeight: "bold",
+                    width: "100%",
+                  }}
+                  label={"Been Skunked: " + userData.beenSkunked}
+                />
+              </Typography>
+            </Grid>
+            <Grid item xs={10}>
+              <Typography align="center">
+                <Chip
+                  color="info"
+                  sx={{
+                    color: "#aae772",
+                    backgroundColor: "#383535",
+                    fontWeight: "bold",
+                    width: "100%",
+                  }}
+                  label={"Games Completed: " + numGamesPlayed}
+                />
+              </Typography>
+            </Grid>
+            <Grid item xs={10} mb={10}>
+              <Typography align="center">
+                <Chip
+                  color="info"
+                  sx={{
+                    color: "#a4d3ee",
+                    backgroundColor: "#383535",
+                    fontWeight: "bold",
+                    width: "100%",
+                  }}
+                  label={"Draws: " + userData.tieGames}
+                />
+              </Typography>
+            </Grid>
+          </Grid>
         </Container>
       </Layout>
     </>
