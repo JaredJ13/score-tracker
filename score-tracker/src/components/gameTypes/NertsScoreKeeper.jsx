@@ -139,47 +139,66 @@ export default function ScoreKeeper() {
 
   const handleAddNewTeam = async () => {
     // validate user input
-    let valid = validateUserInput([
-      { type: "team1name", value: addTeam1Name },
-      { type: "team2name", value: addTeam2Name },
-    ]);
-    setTeam1Error({ error: false, message: "" });
-    setTeam2Error({ error: false, message: "" });
-    if (valid.errors) {
-      // go through and set state for appropiate input errors
-      valid.errorMessages.map((error) => {
-        if (error.type === "team1name") {
-          setTeam1Error({ error: true, message: error.message });
-        }
-        if (error.type === "team2name") {
-          setTeam2Error({ error: true, message: error.message });
-        }
+    // check linked players
+    if (
+      team1LinkedUsers === null ||
+      team1LinkedUsers === undefined ||
+      team1LinkedUsers.length === undefined ||
+      team1LinkedUsers.length <= 0 ||
+      team2LinkedUsers === null ||
+      team2LinkedUsers === undefined ||
+      team2LinkedUsers.length === undefined ||
+      team2LinkedUsers.length <= 0
+    ) {
+      setAlert({
+        alert: true,
+        message:
+          "You must link at least 1 player account for each team to start, linking a player account enables your stats from the game to be saved!",
+        type: "error",
       });
     } else {
+      let valid = validateUserInput([
+        { type: "team1name", value: addTeam1Name },
+        { type: "team2name", value: addTeam2Name },
+      ]);
       setTeam1Error({ error: false, message: "" });
       setTeam2Error({ error: false, message: "" });
+      if (valid.errors) {
+        // go through and set state for appropiate input errors
+        valid.errorMessages.map((error) => {
+          if (error.type === "team1name") {
+            setTeam1Error({ error: true, message: error.message });
+          }
+          if (error.type === "team2name") {
+            setTeam2Error({ error: true, message: error.message });
+          }
+        });
+      } else {
+        setTeam1Error({ error: false, message: "" });
+        setTeam2Error({ error: false, message: "" });
 
-      setChartData([...chartData, [addTeam1Name, 0], [addTeam2Name, 0]]);
-      setTeams([...teams, addTeam1Name, addTeam2Name]);
+        setChartData([...chartData, [addTeam1Name, 0], [addTeam2Name, 0]]);
+        setTeams([...teams, addTeam1Name, addTeam2Name]);
 
-      // add team name to each linked user data
-      let linkedUsers1 = [];
-      team1LinkedUsers.map((user) => {
-        let updatedUser = user;
-        updatedUser["team"] = addTeam1Name;
-        linkedUsers1.push(updatedUser);
-      });
-      setTeam1LinkedUsers([...linkedUsers1]);
+        // add team name to each linked user data
+        let linkedUsers1 = [];
+        team1LinkedUsers.map((user) => {
+          let updatedUser = user;
+          updatedUser["team"] = addTeam1Name;
+          linkedUsers1.push(updatedUser);
+        });
+        setTeam1LinkedUsers([...linkedUsers1]);
 
-      let linkedUsers2 = [];
-      team2LinkedUsers.map((user) => {
-        let updatedUser = user;
-        updatedUser["team"] = addTeam2Name;
-        linkedUsers2.push(updatedUser);
-      });
-      setTeam2LinkedUsers([...linkedUsers2]);
-      handleAddTeamModal();
-      setAlert({ alert: true, message: "Match initiated", type: "success" });
+        let linkedUsers2 = [];
+        team2LinkedUsers.map((user) => {
+          let updatedUser = user;
+          updatedUser["team"] = addTeam2Name;
+          linkedUsers2.push(updatedUser);
+        });
+        setTeam2LinkedUsers([...linkedUsers2]);
+        handleAddTeamModal();
+        setAlert({ alert: true, message: "Match initiated", type: "success" });
+      }
     }
   };
 
@@ -259,14 +278,26 @@ export default function ScoreKeeper() {
   const updateLinkedUsersStartGame = async () => {
     const batch = writeBatch(db);
 
+    let currentDate = new Date();
+
     team1LinkedUsers.map((user) => {
       batch.update(doc(db, "appUsers", user.docId), {
-        matchesInvolvedIn: arrayUnion(currentMatchId),
+        matchesInvolvedIn: arrayUnion({
+          matchId: currentMatchId,
+          dateStarted: Timestamp.fromDate(currentDate),
+          team1: addTeam1Name,
+          team2: addTeam2Name,
+        }),
       });
     });
     team2LinkedUsers.map((user) => {
       batch.update(doc(db, "appUsers", user.docId), {
-        matchesInvolvedIn: arrayUnion(currentMatchId),
+        matchesInvolvedIn: arrayUnion({
+          matchId: currentMatchId,
+          dateStarted: Timestamp.fromDate(currentDate),
+          team1: addTeam1Name,
+          team2: addTeam2Name,
+        }),
       });
     });
 

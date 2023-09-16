@@ -62,7 +62,7 @@ export default function NewGame() {
           if (arrayComplete !== null && arrayComplete !== undefined) {
             arrayInvolved.map((match) => {
               // go through and find ones not in completed array
-              const isComplete = arrayComplete.find((x) => x === match);
+              const isComplete = arrayComplete.find((x) => x === match.matchId);
               if (!isComplete) {
                 inProgress.push(match);
               }
@@ -192,20 +192,29 @@ export default function NewGame() {
                     return (
                       <Grid item xs={10}>
                         <Card
-                          key={game}
+                          key={game.matchId}
                           sx={{ backgroundColor: "#96aaf9", color: "#fff" }}
                         >
                           <CardContent>
                             <Grid container justifyContent="space-between">
-                              <Grid item xs={3}>
-                                <Typography pt={1} sx={{ width: "100%" }}>
-                                  {game}
+                              <Grid item xs={10}>
+                                <Typography
+                                  pt={1}
+                                  sx={{ width: "100%", fontSize: "12px" }}
+                                >
+                                  {`${game.dateStarted
+                                    .toDate()
+                                    .toDateString()} | ${game.team1} vs ${
+                                    game.team2
+                                  }`}
                                 </Typography>
                               </Grid>
                               <Grid item xs={2}>
                                 <Button
                                   endIcon={<PlayCircleOutlineOutlinedIcon />}
-                                  onClick={() => handleContinueMatch(game)}
+                                  onClick={() =>
+                                    handleContinueMatch(game.matchId)
+                                  }
                                   sx={{ width: "100%", color: "#fff" }}
                                 ></Button>
                               </Grid>
