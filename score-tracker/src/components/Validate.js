@@ -107,7 +107,7 @@ export const validateUserInput = (inputs) => {
     }
     else if (input.type === "team1score") {
       if (
-        isNaN(input.value)
+        isNaN(input.value) || input.value.trim() === '' || input.value === null || input.value === undefined
       ) {
         validation.errors = true;
         validation.errorMessages.push({
@@ -118,7 +118,7 @@ export const validateUserInput = (inputs) => {
     }
     else if (input.type === "team2score") {
       if (
-        isNaN(input.value)
+        isNaN(input.value) || input.value.trim() === '' || input.value === null || input.value === undefined
       ) {
         validation.errors = true;
         validation.errorMessages.push({
