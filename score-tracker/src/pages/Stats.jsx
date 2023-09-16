@@ -183,7 +183,16 @@ export default function Stats() {
                     label={"Win/Loss Ratio: " + winLossRatio}
                   />
                 ) : (
-                  <Chip color="info" sx={{ color: "#fff" }} label="0" />
+                  <Chip
+                    color="info"
+                    sx={{
+                      color: "#aae772",
+                      backgroundColor: "#383535",
+                      fontWeight: "bold",
+                      width: "100%",
+                    }}
+                    label="Win/Loss Ratio: 0"
+                  />
                 )}
               </Typography>
             </Grid>

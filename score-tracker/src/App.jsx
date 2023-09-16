@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { auth } from "./firebase/FirebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
 import { createTheme, ThemeProvider } from "@mui/material";
@@ -58,6 +58,7 @@ function App() {
         {user === null ? (
           <Routes>
             <Route path="/" element={<InitialLogin />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         ) : (
           <Routes>
@@ -66,6 +67,7 @@ function App() {
             <Route path="match" element={<NewGame />} />
             <Route path="account" element={<Account />} />
             <Route path="nerts" element={<NertsScoreTracker />} />
+            <Route path="*" element={<Navigate to="/stats" />} />
           </Routes>
         )}
       </ThemeProvider>
