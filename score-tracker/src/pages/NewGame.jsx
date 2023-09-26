@@ -23,6 +23,7 @@ import {
   getDocs,
   doc,
   getDoc,
+  writeBatch,
 } from "firebase/firestore";
 
 import Layout from "../components/global/Layout";
@@ -30,6 +31,7 @@ import Layout from "../components/global/Layout";
 // icon imports
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PlayCircleOutlineOutlinedIcon from "@mui/icons-material/PlayCircleOutlineOutlined";
+import HighlightOffOutlinedIcon from "@mui/icons-material/HighlightOffOutlined";
 
 export default function NewGame() {
   // state
@@ -110,6 +112,58 @@ export default function NewGame() {
     } else {
       console.log("no data returned");
     }
+  };
+
+  const handleDeleteMatch = async (matchId) => {
+    // batch delete from matches and appUsers
+    const batch = writeBatch(db);
+
+    // get players uids for match
+    let playerIdsInvolvedInMatch = [];
+    await getDoc(doc(db, "matches", `${matchId}`)).then((snapshot) => {
+      if (snapshot.exists()) {
+        let object = snapshot.data().teamsInvolved;
+        for (const team in object) {
+          object[team].forEach((player) => {
+            playerIdsInvolvedInMatch.push(player.docId);
+          });
+        }
+      }
+    });
+
+    // go through users involved in match
+    for (const playerId of playerIdsInvolvedInMatch) {
+      let matchesInvolvedIn = [];
+      await getDoc(doc(db, "appUsers", `${playerId}`)).then((snapshot) => {
+        matchesInvolvedIn = [...snapshot.data().matchesInvolvedIn];
+      });
+
+      // find and remove match from matchesinvolvedin
+      let index = matchesInvolvedIn.findIndex((x) => x.matchId === matchId);
+      matchesInvolvedIn.splice(index, 1);
+
+      // rewrite updated matches involved in to appUsers
+      batch.update(doc(db, `appUsers`, `${playerId}`), {
+        matchesInvolvedIn: matchesInvolvedIn,
+      });
+    }
+
+    // delete match from matches collection
+    batch.delete(doc(db, "matches", `${matchId}`));
+
+    // commit the batch
+    await batch
+      .commit()
+      .then(() => {
+        // find and remove match from in progress games
+        let inProgressGamesCopy = [...inProgressGames];
+        let index = inProgressGamesCopy.findIndex((x) => x.matchId === matchId);
+        inProgressGamesCopy.splice(index, 1);
+        setInProgressGames(inProgressGamesCopy);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   return (
@@ -197,7 +251,7 @@ export default function NewGame() {
                         >
                           <CardContent>
                             <Grid container justifyContent="space-between">
-                              <Grid item xs={10}>
+                              <Grid item xs={8}>
                                 <Typography
                                   pt={1}
                                   sx={{ width: "100%", fontSize: "12px" }}
@@ -209,14 +263,31 @@ export default function NewGame() {
                                   }`}
                                 </Typography>
                               </Grid>
-                              <Grid item xs={2}>
-                                <Button
-                                  endIcon={<PlayCircleOutlineOutlinedIcon />}
-                                  onClick={() =>
-                                    handleContinueMatch(game.matchId)
-                                  }
-                                  sx={{ width: "100%", color: "#fff" }}
-                                ></Button>
+                              <Grid item xs={4}>
+                                <Grid container justifyContent="end">
+                                  <Grid item xs={4}>
+                                    <Button
+                                      onClick={() =>
+                                        handleDeleteMatch(game.matchId)
+                                      }
+                                      endIcon={
+                                        <HighlightOffOutlinedIcon color="error" />
+                                      }
+                                      sx={{ width: "100%", color: "#fff" }}
+                                    ></Button>
+                                  </Grid>
+                                  <Grid item xs={6}>
+                                    <Button
+                                      endIcon={
+                                        <PlayCircleOutlineOutlinedIcon />
+                                      }
+                                      onClick={() =>
+                                        handleContinueMatch(game.matchId)
+                                      }
+                                      sx={{ width: "100%", color: "#fff" }}
+                                    ></Button>
+                                  </Grid>
+                                </Grid>
                               </Grid>
                             </Grid>
                           </CardContent>
