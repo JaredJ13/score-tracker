@@ -15,11 +15,10 @@ import {
   updateDoc,
   doc,
   getDoc,
-  query,
-  where,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/FirebaseConfig";
+import { renderAlert } from "../components/Alerts";
 
 import Layout from "../components/global/Layout";
 
@@ -30,16 +29,14 @@ import { useEffect, useState } from "react";
 export default function Account() {
   // general state
   const [allUserDisplayNames, setAllUserDisplayNames] = useState([]);
-  const [currentUserData, setCurrentUserData] = useState([]);
+  const [alert, setAlert] = useState({ alert: false, message: "", type: "" });
+  const [gameSettings, setGameSettings] = useState([]);
 
   // default team state
   const [team1Name, setTeam1Name] = useState("");
   const [team2Name, setTeam2Name] = useState("");
   const [team1LinkedUsers, setTeam1LinkedUsers] = useState([]);
   const [team2LinkedUsers, setTeam2LinkedUsers] = useState([]);
-
-  // get current user uid
-  // const currentUserUID = auth.currentUser.uid;
 
   // initialize useNavigate
   const navigate = useNavigate();
@@ -48,9 +45,19 @@ export default function Account() {
   useEffect(() => {
     // get all users for default teams user link selection
     getAllUsers();
-    // get appUsers data for the current user
-    // getCurrentUserData();
+    // get current user game settings
+    getGameSettings();
   }, []);
+
+  useEffect(() => {
+    // set teams to defaults for current user if they exist
+    if (gameSettings !== null && gameSettings !== undefined) {
+      setTeam1Name(gameSettings.team1Name);
+      setTeam2Name(gameSettings.team2Name);
+      setTeam1LinkedUsers(gameSettings.team1LinkedUsers);
+      setTeam2LinkedUsers(gameSettings.team2LinkedUsers);
+    }
+  }, [gameSettings]);
 
   // ---------- DB FUNCTIONS (ASYNCHRONOUS DATABASE FUNCTIONS NEEDED IN USE EFFECT HOOKS)----------------
   const getAllUsers = async () => {
@@ -71,23 +78,21 @@ export default function Account() {
       });
   };
 
-  // const getCurrentUserData = async () => {
-  //   let q = query(
-  //     collection(db, "appUsers"),
-  //     where("uid", "==", `${currentUserUID}`)
-  //   );
-  //   await getDocs(q)
-  //     .then((querySnapshot) => {
-  //       querySnapshot.forEach((doc) => {
-  //         let userData = doc.data();
-  //         userData["docId"] = doc.id;
-  //         setCurrentUserData([...currentUserData, userData]);
-  //       });
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //     });
-  // };
+  const getGameSettings = async () => {
+    await getDoc(
+      doc(db, "appUsers", `${localStorage.getItem("currentUserDocId")}`)
+    )
+      .then((res) => {
+        if (res.exists()) {
+          setGameSettings(res.data().defaultNertsSettings);
+        } else {
+          console.log("No game settings found");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
   const updateDefaultTeams = async () => {
     await updateDoc(
@@ -101,9 +106,17 @@ export default function Account() {
           team2LinkedUsers: team2LinkedUsers,
         },
       }
-    ).catch((err) => {
-      console.log(err);
-    });
+    )
+      .then(() => {
+        setAlert({
+          alert: true,
+          message: "Default team settings updated",
+          type: "success",
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   // ---------- HANDLERS -------------------------------
@@ -180,6 +193,7 @@ export default function Account() {
                   label="Default Team 1 Name"
                   type="text"
                   fullWidth
+                  value={team1Name}
                   variant="outlined"
                   onChange={(e) => setTeam1Name(e.target.value)}
                 />
@@ -190,6 +204,7 @@ export default function Account() {
                 multiple
                 options={allUserDisplayNames}
                 getOptionLabel={(option) => option.displayName}
+                value={team1LinkedUsers || []}
                 onChange={(event, value) => {
                   handleTeam1LinkUsers(event, value);
                 }}
@@ -209,6 +224,7 @@ export default function Account() {
                   label="Default Team 2 Name"
                   type="text"
                   fullWidth
+                  value={team2Name}
                   variant="outlined"
                   onChange={(e) => setTeam2Name(e.target.value)}
                 />
@@ -219,6 +235,7 @@ export default function Account() {
                 multiple
                 options={allUserDisplayNames}
                 getOptionLabel={(option) => option.displayName}
+                value={team2LinkedUsers || []}
                 onChange={(event, value) => {
                   handleTeam2LinkUsers(event, value);
                 }}
@@ -237,9 +254,10 @@ export default function Account() {
                 variant="container"
                 onClick={handleSetUserDefaults}
               >
-                Set Settings
+                Update Game Settings
               </Button>
             </Grid>
+            <Grid item xs={12}></Grid>
           </Grid>
         </Paper>
         <Paper sx={{ mb: 12, mt: 6 }}>
@@ -256,6 +274,10 @@ export default function Account() {
             </Grid>
           </Grid>
         </Paper>
+        {/* winner alert dialog end */}
+        {/* snackbar alert */}
+        {alert.alert ? renderAlert(alert.type, alert.message, setAlert) : ""}
+        {/* snackbar alert end */}
       </Container>
     </Layout>
   );

@@ -930,7 +930,7 @@ export default function ScoreKeeper() {
                   <Autocomplete
                     multiple
                     options={allUserDisplayNames}
-                    value={team1LinkedUsers}
+                    value={team1LinkedUsers || []}
                     getOptionLabel={(option) => option.displayName}
                     // defaultValue={sessionStorage.getItem("currentUserId")}
                     onChange={(event, value) => {
@@ -965,7 +965,7 @@ export default function ScoreKeeper() {
                   <Autocomplete
                     multiple
                     options={allUserDisplayNames}
-                    value={team2LinkedUsers}
+                    value={team2LinkedUsers || []}
                     getOptionLabel={(option) => option.displayName}
                     // defaultValue={sessionStorage.getItem("currentUserId")}
                     onChange={(event, value) => {
