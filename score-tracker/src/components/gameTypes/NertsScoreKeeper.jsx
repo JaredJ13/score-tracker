@@ -35,6 +35,7 @@ import {
   writeBatch,
   arrayUnion,
   addDoc,
+  getDoc,
 } from "firebase/firestore";
 import { validateUserInput } from "../Validate";
 
@@ -69,6 +70,7 @@ export default function ScoreKeeper() {
   const [disableAddPointRelatives, setDisableAddPointRelatives] =
     useState(false);
   const [currentMatchIdState, setCurrentMatchIdState] = useState(null);
+  const [gameSettings, setGameSettings] = useState(null);
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
@@ -242,6 +244,22 @@ export default function ScoreKeeper() {
       });
       setAllUserDisplayNames([...userArray]);
     });
+  };
+
+  const getGameSettings = async () => {
+    await getDoc(
+      doc(db, "appUsers", `${localStorage.getItem("currentUserDocId")}`)
+    )
+      .then((res) => {
+        if (res.exists()) {
+          setGameSettings(res.data().defaultNertsSettings);
+        } else {
+          console.log("No game settings found");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   // write team linked users and team names to db
@@ -511,11 +529,23 @@ export default function ScoreKeeper() {
     } else {
       // get all user display names
       getAllUsers();
+      // get user defaultNertsSettings
+      getGameSettings();
       // on component render force user to enter teams
       // open modal
       handleAddTeamModal();
     }
   }, []);
+
+  useEffect(() => {
+    // set teams to defaults for current user if they exist
+    if (gameSettings !== null && gameSettings !== undefined) {
+      setAddTeam1Name(gameSettings.team1Name);
+      setAddTeam2Name(gameSettings.team2Name);
+      setTeam1LinkedUsers(gameSettings.team1LinkedUsers);
+      setTeam2LinkedUsers(gameSettings.team2LinkedUsers);
+    }
+  }, [gameSettings]);
 
   const handleAddPoints = async (team, index) => {
     // validate user input
@@ -893,12 +923,14 @@ export default function ScoreKeeper() {
                     label="Team 1 Name"
                     type="text"
                     fullWidth
+                    value={addTeam1Name}
                     variant="standard"
                     onChange={(e) => setAddTeam1Name(e.target.value)}
                   />
                   <Autocomplete
                     multiple
                     options={allUserDisplayNames}
+                    value={team1LinkedUsers}
                     getOptionLabel={(option) => option.displayName}
                     // defaultValue={sessionStorage.getItem("currentUserId")}
                     onChange={(event, value) => {
@@ -926,12 +958,14 @@ export default function ScoreKeeper() {
                     label="Team 2 Name"
                     type="text"
                     fullWidth
+                    value={addTeam2Name}
                     variant="standard"
                     onChange={(e) => setAddTeam2Name(e.target.value)}
                   />
                   <Autocomplete
                     multiple
                     options={allUserDisplayNames}
+                    value={team2LinkedUsers}
                     getOptionLabel={(option) => option.displayName}
                     // defaultValue={sessionStorage.getItem("currentUserId")}
                     onChange={(event, value) => {

@@ -30,6 +30,7 @@ export default function Stats() {
     await getDocs(userQuery).then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
         setUserData(doc.data());
+        localStorage.setItem("currentUserDocId", doc.id);
       });
     });
   };
