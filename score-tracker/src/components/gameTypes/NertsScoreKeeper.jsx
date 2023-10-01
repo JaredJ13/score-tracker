@@ -210,7 +210,7 @@ export default function ScoreKeeper() {
     let valueArray = [];
     values.map((value) => {
       valueArray.push({
-        uid: value.userId,
+        uid: value.uid,
         displayName: value.displayName,
         docId: value.docId,
       });
@@ -223,7 +223,7 @@ export default function ScoreKeeper() {
     let valueArray = [];
     values.map((value) => {
       valueArray.push({
-        uid: value.userId,
+        uid: value.uid,
         displayName: value.displayName,
         docId: value.docId,
       });
@@ -238,7 +238,7 @@ export default function ScoreKeeper() {
       querySnapshot.forEach((doc) => {
         userArray.push({
           docId: doc.id,
-          userId: doc.data().uid,
+          uid: doc.data().uid,
           displayName: doc.data().displayName,
         });
       });
@@ -930,7 +930,10 @@ export default function ScoreKeeper() {
                   <Autocomplete
                     multiple
                     options={allUserDisplayNames}
-                    value={team1LinkedUsers || []}
+                    value={team1LinkedUsers || null}
+                    isOptionEqualToValue={(option, value) =>
+                      option.displayName === value.displayName
+                    }
                     getOptionLabel={(option) => option.displayName}
                     // defaultValue={sessionStorage.getItem("currentUserId")}
                     onChange={(event, value) => {
@@ -965,7 +968,10 @@ export default function ScoreKeeper() {
                   <Autocomplete
                     multiple
                     options={allUserDisplayNames}
-                    value={team2LinkedUsers || []}
+                    value={team2LinkedUsers || null}
+                    isOptionEqualToValue={(option, value) =>
+                      option.displayName === value.displayName
+                    }
                     getOptionLabel={(option) => option.displayName}
                     // defaultValue={sessionStorage.getItem("currentUserId")}
                     onChange={(event, value) => {

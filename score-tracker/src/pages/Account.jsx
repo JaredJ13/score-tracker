@@ -67,7 +67,7 @@ export default function Account() {
         querySnapshot.forEach((doc) => {
           userArray.push({
             docId: doc.id,
-            userId: doc.data().uid,
+            uid: doc.data().uid,
             displayName: doc.data().displayName,
           });
         });
@@ -136,9 +136,9 @@ export default function Account() {
     let valueArray = [];
     values.map((value) => {
       valueArray.push({
-        userId: value.userId,
-        displayName: value.displayName,
         docId: value.docId,
+        uid: value.uid,
+        displayName: value.displayName,
       });
     });
     setTeam1LinkedUsers([...valueArray]);
@@ -149,9 +149,9 @@ export default function Account() {
     let valueArray = [];
     values.map((value) => {
       valueArray.push({
-        uid: value.userId,
-        displayName: value.displayName,
         docId: value.docId,
+        uid: value.uid,
+        displayName: value.displayName,
       });
     });
     setTeam2LinkedUsers([...valueArray]);
@@ -205,6 +205,9 @@ export default function Account() {
                 options={allUserDisplayNames}
                 getOptionLabel={(option) => option.displayName}
                 value={team1LinkedUsers || []}
+                isOptionEqualToValue={(option, value) =>
+                  option.displayName === value.displayName
+                }
                 onChange={(event, value) => {
                   handleTeam1LinkUsers(event, value);
                 }}
@@ -236,6 +239,9 @@ export default function Account() {
                 options={allUserDisplayNames}
                 getOptionLabel={(option) => option.displayName}
                 value={team2LinkedUsers || []}
+                isOptionEqualToValue={(option, value) =>
+                  option.displayName === value.displayName
+                }
                 onChange={(event, value) => {
                   handleTeam2LinkUsers(event, value);
                 }}
