@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
+  IconButton,
   Card,
   CardContent,
   Container,
@@ -277,26 +278,24 @@ export default function NewGame() {
                                   <Grid item xs={4}>
                                     <Grid container justifyContent="end">
                                       <Grid item xs={4}>
-                                        <Button
+                                        <IconButton
                                           onClick={() =>
                                             handleDeleteMatch(game.matchId)
                                           }
-                                          endIcon={
-                                            <HighlightOffOutlinedIcon color="error" />
-                                          }
                                           sx={{ width: "100%", color: "#fff" }}
-                                        ></Button>
+                                        >
+                                          <HighlightOffOutlinedIcon color="error" />
+                                        </IconButton>
                                       </Grid>
-                                      <Grid item xs={6}>
-                                        <Button
-                                          endIcon={
-                                            <PlayCircleOutlineOutlinedIcon />
-                                          }
+                                      <Grid item xs={4}>
+                                        <IconButton
                                           onClick={() =>
                                             handleContinueMatch(game.matchId)
                                           }
                                           sx={{ width: "100%", color: "#fff" }}
-                                        ></Button>
+                                        >
+                                          <PlayCircleOutlineOutlinedIcon />
+                                        </IconButton>
                                       </Grid>
                                     </Grid>
                                   </Grid>
