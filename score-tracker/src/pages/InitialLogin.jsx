@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Container,
@@ -217,152 +217,186 @@ export default function InitialLogin() {
   return (
     <>
       <ThemeProvider theme={lightTheme}>
-        <Container sx={{ backgroundColor: "#96aaf9", height: "100%", pb: 4 }}>
+        <Container
+          maxWidth="false"
+          sx={{
+            backgroundColor: "#96aaf9",
+            height: "100%",
+            pb: 4,
+          }}
+        >
           <Typography align="center" variant="h2" sx={{ color: "#fff" }} pt={4}>
             Point Tracker
           </Typography>
           <Typography align="center" variant="body2" sx={{ color: "#fff" }}>
             V 1.0
           </Typography>
-          <Paper sx={{ mt: 8 }}>
-            <Typography align="center" variant="h4" pt={2}>
-              Login
-            </Typography>
-            <Box component="form" mt={2} onSubmit={(e) => handleLoginSubmit(e)}>
-              <Grid container justifyContent="center" rowGap={3}>
-                <Grid item xs={10}>
-                  <FormControl sx={{ width: "100%" }}>
-                    <TextField
-                      error={emailErrorLogin.error}
-                      helperText={
-                        emailErrorLogin.error ? emailErrorLogin.message : ""
-                      }
-                      label="Email"
-                      variant="outlined"
-                      type="text"
-                      onChange={(e) => setLoginEmail(e.target.value.trim())}
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={10}>
-                  <FormControl sx={{ width: "100%" }}>
-                    <TextField
-                      error={passwordErrorLogin.error}
-                      helperText={
-                        passwordErrorLogin.error
-                          ? passwordErrorLogin.message
-                          : ""
-                      }
-                      label="Password"
-                      variant="outlined"
-                      type="password"
-                      onChange={(e) => setLoginPassword(e.target.value.trim())}
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={3}>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    sx={{ mb: 2, width: "100%", color: "#fff" }}
-                    type="submit"
-                  >
-                    Login
-                  </Button>
-                </Grid>
-              </Grid>
-            </Box>
-          </Paper>
-          <Typography align="center" variant="h6" pt={4} sx={{ color: "#fff" }}>
-            OR
-          </Typography>
-          <Paper sx={{ mt: 4 }}>
-            <Typography align="center" variant="h4" pt={2}>
-              Sign Up
-            </Typography>
-            <Box
-              component="form"
-              mt={2}
-              onSubmit={(e) => handleSignupSubmit(e)}
-            >
-              <Grid container justifyContent="center" rowGap={3}>
-                <Grid item xs={10}>
-                  <FormControl sx={{ width: "100%" }}>
-                    <TextField
-                      error={emailErrorSignup.error}
-                      helperText={
-                        emailErrorSignup.error ? emailErrorSignup.message : ""
-                      }
-                      label="Email"
-                      variant="outlined"
-                      type="text"
-                      onChange={(e) => setSignupEmail(e.target.value.trim())}
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={10}>
-                  <FormControl sx={{ width: "100%" }}>
-                    <TextField
-                      error={usernameErrorSignup.error}
-                      helperText={
-                        usernameErrorSignup.error
-                          ? usernameErrorSignup.message
-                          : ""
-                      }
-                      label="Username"
-                      variant="outlined"
-                      type="text"
-                      onChange={(e) => setSignupUsername(e.target.value.trim())}
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={10}>
-                  <FormControl sx={{ width: "100%" }}>
-                    <TextField
-                      error={passwordErrorSignup.error}
-                      helperText={
-                        passwordErrorSignup.error
-                          ? passwordErrorSignup.message
-                          : ""
-                      }
-                      label="Password"
-                      variant="outlined"
-                      type="password"
-                      onChange={(e) => setSignupPassword(e.target.value.trim())}
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={10}>
-                  <FormControl sx={{ width: "100%" }}>
-                    <TextField
-                      error={confirmPasswordError.error}
-                      helperText={
-                        confirmPasswordError.error
-                          ? confirmPasswordError.message
-                          : ""
-                      }
-                      label="Confirm Password"
-                      variant="outlined"
-                      type="password"
-                      onChange={(e) =>
-                        setConfirmPassword(e.target.value.trim())
-                      }
-                    />
-                  </FormControl>
-                </Grid>
-                <Grid item xs={3}>
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    sx={{ mb: 2, width: "100%", color: "#fff" }}
-                    type="submit"
-                  >
-                    Sign Up
-                  </Button>
-                </Grid>
-              </Grid>
-            </Box>
-          </Paper>
+          <Grid container justifyContent="center">
+            <Grid item xs={12} sm={6} lg={4}>
+              <Paper sx={{ mt: 8 }}>
+                <Typography align="center" variant="h4" pt={2}>
+                  Login
+                </Typography>
+                <Box
+                  component="form"
+                  mt={2}
+                  onSubmit={(e) => handleLoginSubmit(e)}
+                >
+                  <Grid container justifyContent="center" rowGap={3}>
+                    <Grid item xs={10}>
+                      <FormControl sx={{ width: "100%" }}>
+                        <TextField
+                          error={emailErrorLogin.error}
+                          helperText={
+                            emailErrorLogin.error ? emailErrorLogin.message : ""
+                          }
+                          label="Email"
+                          variant="outlined"
+                          type="text"
+                          onChange={(e) => setLoginEmail(e.target.value.trim())}
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={10}>
+                      <FormControl sx={{ width: "100%" }}>
+                        <TextField
+                          error={passwordErrorLogin.error}
+                          helperText={
+                            passwordErrorLogin.error
+                              ? passwordErrorLogin.message
+                              : ""
+                          }
+                          label="Password"
+                          variant="outlined"
+                          type="password"
+                          onChange={(e) =>
+                            setLoginPassword(e.target.value.trim())
+                          }
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        sx={{ mb: 2, width: "100%", color: "#fff" }}
+                        type="submit"
+                      >
+                        Login
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Paper>
+            </Grid>
+            <Grid item xs={12}>
+              <Typography
+                align="center"
+                variant="h6"
+                pt={4}
+                sx={{ color: "#fff" }}
+              >
+                OR
+              </Typography>
+            </Grid>
+            <Grid item xs={12} sm={6} lg={4}>
+              <Paper sx={{ mt: 4 }}>
+                <Typography align="center" variant="h4" pt={2}>
+                  Sign Up
+                </Typography>
+                <Box
+                  component="form"
+                  mt={2}
+                  onSubmit={(e) => handleSignupSubmit(e)}
+                >
+                  <Grid container justifyContent="center" rowGap={3}>
+                    <Grid item xs={10}>
+                      <FormControl sx={{ width: "100%" }}>
+                        <TextField
+                          error={emailErrorSignup.error}
+                          helperText={
+                            emailErrorSignup.error
+                              ? emailErrorSignup.message
+                              : ""
+                          }
+                          label="Email"
+                          variant="outlined"
+                          type="text"
+                          onChange={(e) =>
+                            setSignupEmail(e.target.value.trim())
+                          }
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={10}>
+                      <FormControl sx={{ width: "100%" }}>
+                        <TextField
+                          error={usernameErrorSignup.error}
+                          helperText={
+                            usernameErrorSignup.error
+                              ? usernameErrorSignup.message
+                              : ""
+                          }
+                          label="Username"
+                          variant="outlined"
+                          type="text"
+                          onChange={(e) =>
+                            setSignupUsername(e.target.value.trim())
+                          }
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={10}>
+                      <FormControl sx={{ width: "100%" }}>
+                        <TextField
+                          error={passwordErrorSignup.error}
+                          helperText={
+                            passwordErrorSignup.error
+                              ? passwordErrorSignup.message
+                              : ""
+                          }
+                          label="Password"
+                          variant="outlined"
+                          type="password"
+                          onChange={(e) =>
+                            setSignupPassword(e.target.value.trim())
+                          }
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={10}>
+                      <FormControl sx={{ width: "100%" }}>
+                        <TextField
+                          error={confirmPasswordError.error}
+                          helperText={
+                            confirmPasswordError.error
+                              ? confirmPasswordError.message
+                              : ""
+                          }
+                          label="Confirm Password"
+                          variant="outlined"
+                          type="password"
+                          onChange={(e) =>
+                            setConfirmPassword(e.target.value.trim())
+                          }
+                        />
+                      </FormControl>
+                    </Grid>
+                    <Grid item xs={3}>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        sx={{ mb: 2, width: "100%", color: "#fff" }}
+                        type="submit"
+                      >
+                        Sign Up
+                      </Button>
+                    </Grid>
+                  </Grid>
+                </Box>
+              </Paper>
+            </Grid>
+          </Grid>
           {firestoreError.error
             ? renderAlert("error", firestoreError.message, setFirestoreError)
             : ""}

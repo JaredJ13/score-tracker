@@ -179,107 +179,114 @@ export default function Account() {
             *Page In Development*
           </Typography> */}
         </Paper>
-        <Paper sx={{ my: 2, pb: 2 }}>
-          <Grid container justifyContent="center" rowGap={3}>
-            <Grid item xs={12} my={2}>
-              <Typography variant="h5" textAlign="center">
-                Set Default Game Settings
-              </Typography>
-            </Grid>
-            <Grid item xs={10}>
-              <Box component="form">
-                <TextField
-                  id="default-team1-name"
-                  label="Default Team 1 Name"
-                  type="text"
-                  fullWidth
-                  value={team1Name}
-                  variant="outlined"
-                  onChange={(e) => setTeam1Name(e.target.value)}
-                />
-              </Box>
-            </Grid>
-            <Grid item xs={10}>
-              <Autocomplete
-                multiple
-                options={allUserDisplayNames}
-                getOptionLabel={(option) => option.displayName}
-                value={team1LinkedUsers || []}
-                isOptionEqualToValue={(option, value) =>
-                  option.displayName === value.displayName
-                }
-                onChange={(event, value) => {
-                  handleTeam1LinkUsers(event, value);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="outlined"
-                    label="Link Player Accounts to Team 2"
+        <Grid container justifyContent="center">
+          <Grid item xs={12} sm={6} lg={4}>
+            <Paper sx={{ my: 2, pb: 2 }}>
+              <Grid container justifyContent="center" rowGap={3}>
+                <Grid item xs={12} my={2}>
+                  <Typography variant="h5" textAlign="center">
+                    Set Default Game Settings
+                  </Typography>
+                </Grid>
+                <Grid item xs={10}>
+                  <Box component="form">
+                    <TextField
+                      id="default-team1-name"
+                      label="Default Team 1 Name"
+                      type="text"
+                      fullWidth
+                      value={team1Name}
+                      variant="outlined"
+                      onChange={(e) => setTeam1Name(e.target.value)}
+                    />
+                  </Box>
+                </Grid>
+                <Grid item xs={10}>
+                  <Autocomplete
+                    multiple
+                    options={allUserDisplayNames}
+                    getOptionLabel={(option) => option.displayName}
+                    value={team1LinkedUsers || []}
+                    isOptionEqualToValue={(option, value) =>
+                      option.displayName === value.displayName
+                    }
+                    onChange={(event, value) => {
+                      handleTeam1LinkUsers(event, value);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        variant="outlined"
+                        label="Link Player Accounts to Team 1"
+                      />
+                    )}
                   />
-                )}
-              />
-            </Grid>
-            <Grid item xs={10}>
-              <Box component="form">
-                <TextField
-                  id="default-team2-name"
-                  label="Default Team 2 Name"
-                  type="text"
-                  fullWidth
-                  value={team2Name}
-                  variant="outlined"
-                  onChange={(e) => setTeam2Name(e.target.value)}
-                />
-              </Box>
-            </Grid>
-            <Grid item xs={10}>
-              <Autocomplete
-                multiple
-                options={allUserDisplayNames}
-                getOptionLabel={(option) => option.displayName}
-                value={team2LinkedUsers || []}
-                isOptionEqualToValue={(option, value) =>
-                  option.displayName === value.displayName
-                }
-                onChange={(event, value) => {
-                  handleTeam2LinkUsers(event, value);
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    variant="outlined"
-                    label="Link Player Accounts to Team 2"
+                </Grid>
+                <Grid item xs={10}>
+                  <Box component="form">
+                    <TextField
+                      id="default-team2-name"
+                      label="Default Team 2 Name"
+                      type="text"
+                      fullWidth
+                      value={team2Name}
+                      variant="outlined"
+                      onChange={(e) => setTeam2Name(e.target.value)}
+                    />
+                  </Box>
+                </Grid>
+                <Grid item xs={10}>
+                  <Autocomplete
+                    multiple
+                    options={allUserDisplayNames}
+                    getOptionLabel={(option) => option.displayName}
+                    value={team2LinkedUsers || []}
+                    isOptionEqualToValue={(option, value) =>
+                      option.displayName === value.displayName
+                    }
+                    onChange={(event, value) => {
+                      handleTeam2LinkUsers(event, value);
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        variant="outlined"
+                        label="Link Player Accounts to Team 2"
+                      />
+                    )}
                   />
-                )}
-              />
-            </Grid>
-            <Grid item xs={6}>
-              <Button
-                sx={{ width: "100%", color: "#f77d1a" }}
-                variant="container"
-                onClick={handleSetUserDefaults}
-              >
-                Update Game Settings
-              </Button>
-            </Grid>
-            <Grid item xs={12}></Grid>
+                </Grid>
+                <Grid item xs={6}>
+                  <Button
+                    sx={{ width: "100%", color: "#f77d1a" }}
+                    variant="container"
+                    onClick={handleSetUserDefaults}
+                  >
+                    Update Game Settings
+                  </Button>
+                </Grid>
+                <Grid item xs={12}></Grid>
+              </Grid>
+            </Paper>
           </Grid>
-        </Paper>
-        <Paper sx={{ mb: 12, mt: 6 }}>
-          <Grid container justifyContent="center">
-            <Grid item xs={6}>
-              <Button
-                sx={{ width: "100%", color: "#f77d1a" }}
-                onClick={handleSignOut}
-                variant="container"
-                endIcon={<ExitToAppOutlinedIcon />}
-              >
-                Sign Out
-              </Button>
-            </Grid>
+          <Grid item xs={12}></Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <Paper sx={{ mb: 12, mt: 1 }}>
+              <Grid container justifyContent="center">
+                <Grid item xs={6}>
+                  <Button
+                    sx={{ width: "100%", color: "#f77d1a" }}
+                    onClick={handleSignOut}
+                    variant="container"
+                    endIcon={<ExitToAppOutlinedIcon />}
+                  >
+                    Sign Out
+                  </Button>
+                </Grid>
+              </Grid>
+            </Paper>
           </Grid>
-        </Paper>
+        </Grid>
         {/* winner alert dialog end */}
         {/* snackbar alert */}
         {alert.alert ? renderAlert(alert.type, alert.message, setAlert) : ""}

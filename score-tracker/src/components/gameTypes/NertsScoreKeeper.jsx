@@ -41,8 +41,6 @@ import { validateUserInput } from "../Validate";
 
 import { renderAlert } from "../Alerts";
 
-import Layout from "../global/Layout";
-
 // icon imports
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -839,420 +837,434 @@ export default function ScoreKeeper() {
 
   return (
     <>
-      <Layout>
-        <Container sx={{ mb: 4 }}>
-          <IconButton sx={{ mt: 1 }} onClick={() => navigate("/match")}>
-            <KeyboardBackspaceOutlinedIcon />
-          </IconButton>
-          <Paper square sx={{ pb: 4, mt: 1 }}>
-            {teams.length >= 1 && teams.length !== undefined ? (
-              <>
-                <Chart
-                  options={options}
-                  chartType="ColumnChart"
-                  width="100%"
-                  height="300px"
-                  data={chartData}
-                />
-                <Grid container justifyContent="space-around">
-                  <Grid item>
-                    <Chip
-                      label={`Round: ${currentRound}`}
-                      color="info"
-                      sx={{ color: "#fff" }}
-                    />
-                  </Grid>
-                  {teams.map((team) => {
-                    let scoreHistoryIndex = scoreHistory.findIndex(
-                      (x) => x.team === team && x.round === currentRound
-                    );
-                    if (scoreHistoryIndex === -1) {
-                      scoreHistoryIndex = scoreHistory.findIndex(
-                        (x) => x.team === team && x.round === currentRound - 1
-                      );
-                    }
-                    return (
-                      <Grid item>
-                        <Chip
-                          label={
-                            scoreHistoryIndex !== -1
-                              ? `${team}'s Score: ${scoreHistory[scoreHistoryIndex].teamScoreTotal}`
-                              : `${team}'s Score: 0`
-                          }
-                          color="secondary"
-                          sx={{ color: "#fff" }}
-                        />
-                      </Grid>
-                    );
-                  })}
-                </Grid>
-              </>
-            ) : (
-              <Grid item></Grid>
-            )}
-            <Grid container justifyContent="center" rowSpacing={2} mt={2}>
-              {teams.length === 0 || teams.length === undefined ? (
-                <Grid item>
-                  <Button
-                    variant="text"
-                    color="secondary"
-                    size="small"
-                    onClick={handleAddTeamModal}
-                  >
-                    Add Match Teams
-                  </Button>
-                </Grid>
-              ) : (
-                ""
-              )}
-              <Dialog open={addTeamModalOpen} onClose={handleAddTeamModal}>
-                <DialogTitle sx={{ minWidth: "30rem" }}>Team Setup</DialogTitle>
-                <DialogContent>
-                  <Divider
-                    textAlign="left"
-                    sx={{ mt: 2, color: "#96aaf9", fontSize: "14px" }}
-                  >
-                    Team 1
-                  </Divider>
-                  <TextField
-                    error={team1Error.error}
-                    helperText={team1Error.error ? team1Error.message : ""}
-                    autoFocus
-                    margin="dense"
-                    id="new-team-name"
-                    label="Team 1 Name"
-                    type="text"
-                    fullWidth
-                    value={addTeam1Name}
-                    variant="standard"
-                    onChange={(e) => setAddTeam1Name(e.target.value)}
-                  />
-                  <Autocomplete
-                    multiple
-                    options={allUserDisplayNames}
-                    value={team1LinkedUsers || null}
-                    isOptionEqualToValue={(option, value) =>
-                      option.displayName === value.displayName
-                    }
-                    getOptionLabel={(option) => option.displayName}
-                    // defaultValue={sessionStorage.getItem("currentUserId")}
-                    onChange={(event, value) => {
-                      handleTeam1LinkUsers(event, value);
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        variant="standard"
-                        label="Link Player Accounts to Team 1"
-                      />
-                    )}
-                  />
-                  <Divider
-                    textAlign="left"
-                    sx={{ mt: 4, color: "#96aaf9", fontSize: "14px" }}
-                  >
-                    Team 2
-                  </Divider>
-                  <TextField
-                    error={team2Error.error}
-                    helperText={team2Error.error ? team2Error.message : ""}
-                    margin="dense"
-                    id="new-team-name"
-                    label="Team 2 Name"
-                    type="text"
-                    fullWidth
-                    value={addTeam2Name}
-                    variant="standard"
-                    onChange={(e) => setAddTeam2Name(e.target.value)}
-                  />
-                  <Autocomplete
-                    multiple
-                    options={allUserDisplayNames}
-                    value={team2LinkedUsers || null}
-                    isOptionEqualToValue={(option, value) =>
-                      option.displayName === value.displayName
-                    }
-                    getOptionLabel={(option) => option.displayName}
-                    // defaultValue={sessionStorage.getItem("currentUserId")}
-                    onChange={(event, value) => {
-                      handleTeam2LinkUsers(event, value);
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        variant="standard"
-                        label="Link Player Accounts to Team 2"
-                      />
-                    )}
-                  />
-                </DialogContent>
-                <DialogActions>
-                  <Button
-                    disabled={startMatchButtonDisabled}
-                    onClick={handleAddNewTeam}
-                  >
-                    Start Match
-                  </Button>
-                </DialogActions>
-              </Dialog>
-              <Snackbar
-                open={snackBarWarning}
-                autoHideDuration={5000}
-                onClose={handleSnackBarWarning}
-              >
-                <MuiAlert
-                  onClose={handleSnackBarWarning}
-                  severity="warning"
-                  variant="filled"
-                  elevation={6}
-                  sx={{ width: "100%" }}
-                >
-                  {`You${"'"}ve already entered a score for this team this round.`}
-                </MuiAlert>
-              </Snackbar>
+      <Container sx={{ mb: 4 }}>
+        <Grid container justifyContent="center">
+          <Grid item xs={12} sm={6} lg={4}>
+            <IconButton sx={{ mt: 1 }} onClick={() => navigate("/match")}>
+              <KeyboardBackspaceOutlinedIcon />
+            </IconButton>
+          </Grid>
+          <Grid item xs={12}></Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <Paper square sx={{ pb: 4, mt: 1 }}>
               {teams.length >= 1 && teams.length !== undefined ? (
-                teams.map((team, index) => {
-                  if (index === 0) {
-                    return (
-                      <Grid
-                        item
-                        container
-                        xs={12}
-                        justifyContent="center"
-                        alignItems="center"
-                        key={index}
-                      >
-                        <Grid item xs={12} mb={2}>
-                          <Divider textAlign="left" sx={{ fontSize: "10px" }}>
-                            Enter Scores
-                          </Divider>
-                        </Grid>
-                        <Grid item xs={6}>
-                          <TextField
-                            error={team1ScoreError.error}
-                            helperText={
-                              team1ScoreError.error
-                                ? team1ScoreError.message
-                                : ""
-                            }
-                            id="outlined-basic"
-                            label={team}
-                            variant="outlined"
-                            fullWidth
-                            type="number"
-                            disabled={disableAddPointRelatives}
-                            value={scoreInput}
-                            onChange={(e) => setScoreInput(e.target.value)}
-                          />
-                        </Grid>
-                        <Grid item>
-                          <IconButton
-                            color="info"
-                            aria-label="add-score"
-                            disabled={disableAddPointRelatives}
-                            onClick={() => handleAddPoints(team, index)}
-                          >
-                            <AddIcon />
-                          </IconButton>
-                        </Grid>
-                      </Grid>
-                    );
-                  } else if (index === 1) {
-                    return (
-                      <Grid
-                        item
-                        container
-                        xs={12}
-                        justifyContent="center"
-                        alignItems="center"
-                        key={index}
-                      >
-                        <Grid item xs={6}>
-                          <TextField
-                            error={team2ScoreError.error}
-                            helperText={
-                              team2ScoreError.error
-                                ? team2ScoreError.message
-                                : ""
-                            }
-                            id="outlined-basic"
-                            label={team}
-                            variant="outlined"
-                            fullWidth
-                            type="number"
-                            disabled={disableAddPointRelatives}
-                            value={scoreInput2}
-                            onChange={(e) => setScoreInput2(e.target.value)}
-                          />
-                        </Grid>
-                        <Grid item>
-                          <IconButton
-                            color="info"
-                            aria-label="add-score"
-                            disabled={disableAddPointRelatives}
-                            onClick={() => handleAddPoints(team, index)}
-                          >
-                            <AddIcon />
-                          </IconButton>
-                        </Grid>
-                      </Grid>
-                    );
-                  }
-                })
-              ) : (
-                <Grid
-                  item
-                  container
-                  xs={12}
-                  justifyContent="center"
-                  alignItems="center"
-                >
-                  <Typography variant="body1">No Teams Added</Typography>
-                </Grid>
-              )}
-            </Grid>
-          </Paper>
-          <Divider sx={{ mt: 4 }}>Score History</Divider>
-          <Typography align="center" variant="body2" sx={{ mb: 4 }}>
-            Score entries from Newest to Oldest
-          </Typography>
-          <Grid
-            container
-            justifyContent="center"
-            direction="column-reverse"
-            xs={12}
-            rowGap={2}
-            mb={10}
-          >
-            {scoreHistory.map((score) => {
-              return (
                 <>
-                  <Grid item>
-                    <Card
-                      square
-                      sx={{
-                        backgroundColor:
-                          score.scoreUpdate > 0
-                            ? "#d0fef1"
-                            : score.scoreUpdate === 0
-                            ? "#cbf2f8"
-                            : "#fcc5c5",
-                      }}
-                    >
-                      <CardContent>
-                        <Grid container justifyContent="space-between">
-                          <Grid item xs={12}>
-                            <Typography variant="h6" color="text.secondary">
-                              {`Round ${score.round} Team ${score.team}`}
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <Typography variant="h4" sx={{ color: "#282838" }}>
-                              {score.scoreUpdate > 0 ? "+" : ""}
-                              {score.scoreUpdate} <StarRateIcon />
-                            </Typography>
-                          </Grid>
-                          <Grid item xs={4}>
-                            <Button
-                              disabled={disableAddPointRelatives}
-                              variant="contained"
-                              color="info"
-                              endIcon={<EditIcon />}
-                              size="small"
-                              sx={{ color: "#ffffff" }}
-                              onClick={() => {
-                                handleEditScoreModal({ ...score });
-                              }}
-                            >
-                              Modify
-                            </Button>
-                          </Grid>
-                          <Grid item xs={12}>
-                            <Typography variant="h6" color="text.secondary">
-                              Total Team Score: {score.teamScoreTotal}
-                            </Typography>
-                          </Grid>
+                  <Chart
+                    options={options}
+                    chartType="ColumnChart"
+                    width="100%"
+                    height="300px"
+                    data={chartData}
+                  />
+                  <Grid container justifyContent="space-around">
+                    <Grid item>
+                      <Chip
+                        label={`Round: ${currentRound}`}
+                        color="info"
+                        sx={{ color: "#fff" }}
+                      />
+                    </Grid>
+                    {teams.map((team) => {
+                      let scoreHistoryIndex = scoreHistory.findIndex(
+                        (x) => x.team === team && x.round === currentRound
+                      );
+                      if (scoreHistoryIndex === -1) {
+                        scoreHistoryIndex = scoreHistory.findIndex(
+                          (x) => x.team === team && x.round === currentRound - 1
+                        );
+                      }
+                      return (
+                        <Grid item>
+                          <Chip
+                            label={
+                              scoreHistoryIndex !== -1
+                                ? `${team}'s Score: ${scoreHistory[scoreHistoryIndex].teamScoreTotal}`
+                                : `${team}'s Score: 0`
+                            }
+                            color="secondary"
+                            sx={{ color: "#fff" }}
+                          />
                         </Grid>
-                      </CardContent>
-                    </Card>
+                      );
+                    })}
                   </Grid>
                 </>
-              );
-            })}
-          </Grid>
-          {editScoreData !== null && editScoreData !== undefined ? (
-            <Dialog open={editScoreModalOpen} onClose={handleEditScoreModal}>
-              <DialogTitle>Edit Score</DialogTitle>
-              <DialogContentText sx={{ px: 3 }}>
-                Enter updated points below to modify the previous score for
-              </DialogContentText>
-              <DialogContentText sx={{ color: "#f77d1a", px: 3 }}>
-                {`Round ${editScoreData.round} Team ${editScoreData.team}`}
-              </DialogContentText>
-              <DialogContent>
-                <TextField
-                  id="outlined-basic"
-                  label="Score Update"
-                  variant="outlined"
-                  fullWidth
-                  type="number"
-                  defaultValue={editScoreData.scoreUpdate}
-                  onChange={(e) => setEditScoreInput(e.target.value)}
-                  sx={{ color: "#96aaf9", mt: 1 }}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button
-                  color="error"
-                  variant="outlined"
-                  onClick={handleEditScoreModal}
-                >
-                  Cancel
-                </Button>
-                {!loading ? (
-                  <Button variant="outlined" onClick={handleEditScore}>
-                    Update Score
-                  </Button>
+              ) : (
+                <Grid item></Grid>
+              )}
+              <Grid container justifyContent="center" rowSpacing={2} mt={2}>
+                {teams.length === 0 || teams.length === undefined ? (
+                  <Grid item>
+                    <Button
+                      variant="text"
+                      color="secondary"
+                      size="small"
+                      onClick={handleAddTeamModal}
+                    >
+                      Add Match Teams
+                    </Button>
+                  </Grid>
                 ) : (
-                  <CircularProgress
-                    color="info"
-                    size={25}
-                    sx={{ ml: 1, mr: 3 }}
-                  />
+                  ""
                 )}
-              </DialogActions>
-            </Dialog>
-          ) : (
-            ""
-          )}
-          {/* winner alert dialog */}
-          {winningTeamData !== null && winningTeamData !== undefined ? (
-            <Dialog
-              open={winnerDialogModalOpen}
-              onClose={handleWinnerDialogModal}
+                <Dialog open={addTeamModalOpen} onClose={handleAddTeamModal}>
+                  <DialogTitle sx={{ minWidth: "30rem" }}>
+                    Team Setup
+                  </DialogTitle>
+                  <DialogContent>
+                    <Divider
+                      textAlign="left"
+                      sx={{ mt: 2, color: "#96aaf9", fontSize: "14px" }}
+                    >
+                      Team 1
+                    </Divider>
+                    <TextField
+                      error={team1Error.error}
+                      helperText={team1Error.error ? team1Error.message : ""}
+                      autoFocus
+                      margin="dense"
+                      id="new-team-name"
+                      label="Team 1 Name"
+                      type="text"
+                      fullWidth
+                      value={addTeam1Name}
+                      variant="standard"
+                      onChange={(e) => setAddTeam1Name(e.target.value)}
+                    />
+                    <Autocomplete
+                      multiple
+                      options={allUserDisplayNames}
+                      value={team1LinkedUsers || null}
+                      isOptionEqualToValue={(option, value) =>
+                        option.displayName === value.displayName
+                      }
+                      getOptionLabel={(option) => option.displayName}
+                      // defaultValue={sessionStorage.getItem("currentUserId")}
+                      onChange={(event, value) => {
+                        handleTeam1LinkUsers(event, value);
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="standard"
+                          label="Link Player Accounts to Team 1"
+                        />
+                      )}
+                    />
+                    <Divider
+                      textAlign="left"
+                      sx={{ mt: 4, color: "#96aaf9", fontSize: "14px" }}
+                    >
+                      Team 2
+                    </Divider>
+                    <TextField
+                      error={team2Error.error}
+                      helperText={team2Error.error ? team2Error.message : ""}
+                      margin="dense"
+                      id="new-team-name"
+                      label="Team 2 Name"
+                      type="text"
+                      fullWidth
+                      value={addTeam2Name}
+                      variant="standard"
+                      onChange={(e) => setAddTeam2Name(e.target.value)}
+                    />
+                    <Autocomplete
+                      multiple
+                      options={allUserDisplayNames}
+                      value={team2LinkedUsers || null}
+                      isOptionEqualToValue={(option, value) =>
+                        option.displayName === value.displayName
+                      }
+                      getOptionLabel={(option) => option.displayName}
+                      // defaultValue={sessionStorage.getItem("currentUserId")}
+                      onChange={(event, value) => {
+                        handleTeam2LinkUsers(event, value);
+                      }}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          variant="standard"
+                          label="Link Player Accounts to Team 2"
+                        />
+                      )}
+                    />
+                  </DialogContent>
+                  <DialogActions>
+                    <Button
+                      disabled={startMatchButtonDisabled}
+                      onClick={handleAddNewTeam}
+                    >
+                      Start Match
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+                <Snackbar
+                  open={snackBarWarning}
+                  autoHideDuration={5000}
+                  onClose={handleSnackBarWarning}
+                >
+                  <MuiAlert
+                    onClose={handleSnackBarWarning}
+                    severity="warning"
+                    variant="filled"
+                    elevation={6}
+                    sx={{ width: "100%" }}
+                  >
+                    {`You${"'"}ve already entered a score for this team this round.`}
+                  </MuiAlert>
+                </Snackbar>
+                {teams.length >= 1 && teams.length !== undefined ? (
+                  teams.map((team, index) => {
+                    if (index === 0) {
+                      return (
+                        <Grid
+                          item
+                          container
+                          xs={12}
+                          justifyContent="center"
+                          alignItems="center"
+                          key={index}
+                        >
+                          <Grid item xs={12} mb={2}>
+                            <Divider textAlign="left" sx={{ fontSize: "10px" }}>
+                              Enter Scores
+                            </Divider>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <TextField
+                              error={team1ScoreError.error}
+                              helperText={
+                                team1ScoreError.error
+                                  ? team1ScoreError.message
+                                  : ""
+                              }
+                              id="outlined-basic"
+                              label={team}
+                              variant="outlined"
+                              fullWidth
+                              type="number"
+                              disabled={disableAddPointRelatives}
+                              value={scoreInput}
+                              onChange={(e) => setScoreInput(e.target.value)}
+                            />
+                          </Grid>
+                          <Grid item>
+                            <IconButton
+                              color="info"
+                              aria-label="add-score"
+                              disabled={disableAddPointRelatives}
+                              onClick={() => handleAddPoints(team, index)}
+                            >
+                              <AddIcon />
+                            </IconButton>
+                          </Grid>
+                        </Grid>
+                      );
+                    } else if (index === 1) {
+                      return (
+                        <Grid
+                          item
+                          container
+                          xs={12}
+                          justifyContent="center"
+                          alignItems="center"
+                          key={index}
+                        >
+                          <Grid item xs={6}>
+                            <TextField
+                              error={team2ScoreError.error}
+                              helperText={
+                                team2ScoreError.error
+                                  ? team2ScoreError.message
+                                  : ""
+                              }
+                              id="outlined-basic"
+                              label={team}
+                              variant="outlined"
+                              fullWidth
+                              type="number"
+                              disabled={disableAddPointRelatives}
+                              value={scoreInput2}
+                              onChange={(e) => setScoreInput2(e.target.value)}
+                            />
+                          </Grid>
+                          <Grid item>
+                            <IconButton
+                              color="info"
+                              aria-label="add-score"
+                              disabled={disableAddPointRelatives}
+                              onClick={() => handleAddPoints(team, index)}
+                            >
+                              <AddIcon />
+                            </IconButton>
+                          </Grid>
+                        </Grid>
+                      );
+                    }
+                  })
+                ) : (
+                  <Grid
+                    item
+                    container
+                    xs={12}
+                    justifyContent="center"
+                    alignItems="center"
+                  >
+                    <Typography variant="body1">No Teams Added</Typography>
+                  </Grid>
+                )}
+              </Grid>
+            </Paper>
+          </Grid>
+          <Grid item xs={12}></Grid>
+          <Grid item xs={12} sm={6} lg={4}>
+            <Divider sx={{ mt: 4 }}>Score History</Divider>
+            <Typography align="center" variant="body2" sx={{ mb: 4 }}>
+              Score entries from Newest to Oldest
+            </Typography>
+            <Grid
+              container
+              justifyContent="center"
+              direction="column-reverse"
+              xs={12}
+              rowGap={2}
+              mb={10}
             >
-              <DialogTitle>
+              {scoreHistory.map((score) => {
+                return (
+                  <>
+                    <Grid item>
+                      <Card
+                        square
+                        sx={{
+                          backgroundColor:
+                            score.scoreUpdate > 0
+                              ? "#d0fef1"
+                              : score.scoreUpdate === 0
+                              ? "#cbf2f8"
+                              : "#fcc5c5",
+                        }}
+                      >
+                        <CardContent>
+                          <Grid container justifyContent="space-between">
+                            <Grid item xs={12}>
+                              <Typography variant="h6" color="text.secondary">
+                                {`Round ${score.round} Team ${score.team}`}
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={6}>
+                              <Typography
+                                variant="h4"
+                                sx={{ color: "#282838" }}
+                              >
+                                {score.scoreUpdate > 0 ? "+" : ""}
+                                {score.scoreUpdate} <StarRateIcon />
+                              </Typography>
+                            </Grid>
+                            <Grid item xs={4}>
+                              <Button
+                                disabled={disableAddPointRelatives}
+                                variant="contained"
+                                color="info"
+                                endIcon={<EditIcon />}
+                                size="small"
+                                sx={{ color: "#ffffff" }}
+                                onClick={() => {
+                                  handleEditScoreModal({ ...score });
+                                }}
+                              >
+                                Modify
+                              </Button>
+                            </Grid>
+                            <Grid item xs={12}>
+                              <Typography variant="h6" color="text.secondary">
+                                Total Team Score: {score.teamScoreTotal}
+                              </Typography>
+                            </Grid>
+                          </Grid>
+                        </CardContent>
+                      </Card>
+                    </Grid>
+                  </>
+                );
+              })}
+            </Grid>
+          </Grid>
+        </Grid>
+
+        {editScoreData !== null && editScoreData !== undefined ? (
+          <Dialog open={editScoreModalOpen} onClose={handleEditScoreModal}>
+            <DialogTitle>Edit Score</DialogTitle>
+            <DialogContentText sx={{ px: 3 }}>
+              Enter updated points below to modify the previous score for
+            </DialogContentText>
+            <DialogContentText sx={{ color: "#f77d1a", px: 3 }}>
+              {`Round ${editScoreData.round} Team ${editScoreData.team}`}
+            </DialogContentText>
+            <DialogContent>
+              <TextField
+                id="outlined-basic"
+                label="Score Update"
+                variant="outlined"
+                fullWidth
+                type="number"
+                defaultValue={editScoreData.scoreUpdate}
+                onChange={(e) => setEditScoreInput(e.target.value)}
+                sx={{ color: "#96aaf9", mt: 1 }}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button
+                color="error"
+                variant="outlined"
+                onClick={handleEditScoreModal}
+              >
+                Cancel
+              </Button>
+              {!loading ? (
+                <Button variant="outlined" onClick={handleEditScore}>
+                  Update Score
+                </Button>
+              ) : (
+                <CircularProgress
+                  color="info"
+                  size={25}
+                  sx={{ ml: 1, mr: 3 }}
+                />
+              )}
+            </DialogActions>
+          </Dialog>
+        ) : (
+          ""
+        )}
+        {/* winner alert dialog */}
+        {winningTeamData !== null && winningTeamData !== undefined ? (
+          <Dialog
+            open={winnerDialogModalOpen}
+            onClose={handleWinnerDialogModal}
+          >
+            <DialogTitle>
+              {winningTeamData.tieGame
+                ? `Woah! Looks like you tied!`
+                : `Congratulations Team ${winningTeamData.winner}, you won!`}
+            </DialogTitle>
+            <DialogContent>
+              <DialogContentText>
                 {winningTeamData.tieGame
-                  ? `Woah! Looks like you tied!`
-                  : `Congratulations Team ${winningTeamData.winner}, you won!`}
-              </DialogTitle>
-              <DialogContent>
-                <DialogContentText>
-                  {winningTeamData.tieGame
-                    ? `The ${winningTeamData.winner}'s & the ${winningTeamData.loser}'s tied with a score of ${winningTeamData.winnerScore} - ${winningTeamData.loserScore}`
-                    : `Team ${winningTeamData.winner} won the game with a score of ${winningTeamData.winnerScore}`}
-                </DialogContentText>
-              </DialogContent>
-            </Dialog>
-          ) : (
-            ""
-          )}
-          {/* winner alert dialog end */}
-          {/* snackbar alert */}
-          {alert.alert ? renderAlert(alert.type, alert.message, setAlert) : ""}
-          {/* snackbar alert end */}
-        </Container>
-      </Layout>
+                  ? `The ${winningTeamData.winner}'s & the ${winningTeamData.loser}'s tied with a score of ${winningTeamData.winnerScore} - ${winningTeamData.loserScore}`
+                  : `Team ${winningTeamData.winner} won the game with a score of ${winningTeamData.winnerScore}`}
+              </DialogContentText>
+            </DialogContent>
+          </Dialog>
+        ) : (
+          ""
+        )}
+        {/* winner alert dialog end */}
+        {/* snackbar alert */}
+        {alert.alert ? renderAlert(alert.type, alert.message, setAlert) : ""}
+        {/* snackbar alert end */}
+      </Container>
     </>
   );
 }

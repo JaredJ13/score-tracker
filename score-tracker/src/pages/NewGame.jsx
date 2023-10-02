@@ -193,112 +193,125 @@ export default function NewGame() {
               </Grid>
             </Grid>
           </Paper>
-          {/* new game paper */}
-          <Paper elevation={1}>
-            <Typography align="center" variant="h5" pt={2} color="default">
-              New Game
-            </Typography>
-            <Grid container justifyContent="center" spacing={2} mt={2}>
-              <Grid item xs={10}>
-                <FormControl required sx={{ width: "100%" }}>
-                  <InputLabel id="game-type-select-label" color="secondary">
-                    Game Type
-                  </InputLabel>
-                  <Select
-                    error={selectGameError.error}
-                    help
-                    labelId="game-type-select-label"
-                    value={gameType}
-                    label="Game Type *"
-                    onChange={(e) => setGameType(e.target.value)}
-                    color="secondary"
-                  >
-                    <MenuItem value="nerts">Nerts</MenuItem>
-                  </Select>
-                  <FormHelperText sx={{ color: "#d64646" }}>
-                    {selectGameError.error ? selectGameError.message : ""}
-                  </FormHelperText>
-                </FormControl>
-              </Grid>
-              <Grid item>
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  endIcon={<PlayArrowIcon />}
-                  sx={{ mb: 2, color: "#fff" }}
-                  onClick={handleNewMatch}
-                >
-                  Start New Match
-                </Button>
-              </Grid>
+          <Grid container justifyContent="center">
+            <Grid item xs={12} sm={6} lg={4}>
+              {/* new game paper */}
+              <Paper elevation={1}>
+                <Typography align="center" variant="h5" pt={2} color="default">
+                  New Game
+                </Typography>
+                <Grid container justifyContent="center" spacing={2} mt={2}>
+                  <Grid item xs={10}>
+                    <FormControl required sx={{ width: "100%" }}>
+                      <InputLabel id="game-type-select-label" color="secondary">
+                        Game Type
+                      </InputLabel>
+                      <Select
+                        error={selectGameError.error}
+                        help
+                        labelId="game-type-select-label"
+                        value={gameType}
+                        label="Game Type *"
+                        onChange={(e) => setGameType(e.target.value)}
+                        color="secondary"
+                      >
+                        <MenuItem value="nerts">Nerts</MenuItem>
+                      </Select>
+                      <FormHelperText sx={{ color: "#d64646" }}>
+                        {selectGameError.error ? selectGameError.message : ""}
+                      </FormHelperText>
+                    </FormControl>
+                  </Grid>
+                  <Grid item>
+                    <Button
+                      variant="contained"
+                      color="secondary"
+                      endIcon={<PlayArrowIcon />}
+                      sx={{ mb: 2, color: "#fff" }}
+                      onClick={handleNewMatch}
+                    >
+                      Start New Match
+                    </Button>
+                  </Grid>
+                </Grid>
+              </Paper>
+              {/* end new game paper */}
             </Grid>
-          </Paper>
-          {/* end new game paper */}
-          {/* continue game paper */}
-          <Paper sx={{ mt: 4, mb: 10 }} elevation={1}>
-            <Typography align="center" variant="h5" pt={2} color="default">
-              Continue a Game
-            </Typography>
-            <Grid container justifyContent="center" spacing={2} mt={2} pb={2}>
-              {inProgressGames.length !== undefined &&
-              inProgressGames.length > 0
-                ? inProgressGames.map((game) => {
-                    return (
-                      <Grid item xs={10}>
-                        <Card
-                          key={game.matchId}
-                          sx={{ backgroundColor: "#96aaf9", color: "#fff" }}
-                        >
-                          <CardContent>
-                            <Grid container justifyContent="space-between">
-                              <Grid item xs={8}>
-                                <Typography
-                                  pt={1}
-                                  sx={{ width: "100%", fontSize: "12px" }}
-                                >
-                                  {`${game.dateStarted
-                                    .toDate()
-                                    .toDateString()} | ${game.team1} vs ${
-                                    game.team2
-                                  }`}
-                                </Typography>
-                              </Grid>
-                              <Grid item xs={4}>
-                                <Grid container justifyContent="end">
-                                  <Grid item xs={4}>
-                                    <Button
-                                      onClick={() =>
-                                        handleDeleteMatch(game.matchId)
-                                      }
-                                      endIcon={
-                                        <HighlightOffOutlinedIcon color="error" />
-                                      }
-                                      sx={{ width: "100%", color: "#fff" }}
-                                    ></Button>
+            <Grid item xs={12}></Grid>
+            <Grid item xs={12} sm={6} lg={4}>
+              {/* continue game paper */}
+              <Paper sx={{ mt: 4, mb: 10 }} elevation={1}>
+                <Typography align="center" variant="h5" pt={2} color="default">
+                  Continue a Game
+                </Typography>
+                <Grid
+                  container
+                  justifyContent="center"
+                  spacing={2}
+                  mt={2}
+                  pb={2}
+                >
+                  {inProgressGames.length !== undefined &&
+                  inProgressGames.length > 0
+                    ? inProgressGames.map((game) => {
+                        return (
+                          <Grid item xs={10}>
+                            <Card
+                              key={game.matchId}
+                              sx={{ backgroundColor: "#96aaf9", color: "#fff" }}
+                            >
+                              <CardContent>
+                                <Grid container justifyContent="space-between">
+                                  <Grid item xs={8}>
+                                    <Typography
+                                      pt={1}
+                                      sx={{ width: "100%", fontSize: "12px" }}
+                                    >
+                                      {`${game.dateStarted
+                                        .toDate()
+                                        .toDateString()} | ${game.team1} vs ${
+                                        game.team2
+                                      }`}
+                                    </Typography>
                                   </Grid>
-                                  <Grid item xs={6}>
-                                    <Button
-                                      endIcon={
-                                        <PlayCircleOutlineOutlinedIcon />
-                                      }
-                                      onClick={() =>
-                                        handleContinueMatch(game.matchId)
-                                      }
-                                      sx={{ width: "100%", color: "#fff" }}
-                                    ></Button>
+                                  <Grid item xs={4}>
+                                    <Grid container justifyContent="end">
+                                      <Grid item xs={4}>
+                                        <Button
+                                          onClick={() =>
+                                            handleDeleteMatch(game.matchId)
+                                          }
+                                          endIcon={
+                                            <HighlightOffOutlinedIcon color="error" />
+                                          }
+                                          sx={{ width: "100%", color: "#fff" }}
+                                        ></Button>
+                                      </Grid>
+                                      <Grid item xs={6}>
+                                        <Button
+                                          endIcon={
+                                            <PlayCircleOutlineOutlinedIcon />
+                                          }
+                                          onClick={() =>
+                                            handleContinueMatch(game.matchId)
+                                          }
+                                          sx={{ width: "100%", color: "#fff" }}
+                                        ></Button>
+                                      </Grid>
+                                    </Grid>
                                   </Grid>
                                 </Grid>
-                              </Grid>
-                            </Grid>
-                          </CardContent>
-                        </Card>
-                      </Grid>
-                    );
-                  })
-                : ""}
+                              </CardContent>
+                            </Card>
+                          </Grid>
+                        );
+                      })
+                    : ""}
+                </Grid>
+              </Paper>
+              {/* end continue game paper */}
             </Grid>
-          </Paper>
-          {/* end continue game paper */}
+          </Grid>
         </Container>
       </Layout>
     </>
