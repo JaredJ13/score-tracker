@@ -147,7 +147,7 @@ export default function Stats() {
               <Paper sx={{ py: 3, mb: 9 }}>
                 <Grid container justifyContent="space-around" rowGap={2}>
                   <Grid item xs={4}>
-                    <Typography align="center">
+                    <Typography component="span" align="center">
                       <Chip
                         sx={{
                           color: "#aae772",
@@ -160,7 +160,7 @@ export default function Stats() {
                     </Typography>
                   </Grid>
                   <Grid item xs={4}>
-                    <Typography align="center">
+                    <Typography component="span" align="center">
                       <Chip
                         color="info"
                         sx={{
@@ -174,7 +174,7 @@ export default function Stats() {
                     </Typography>
                   </Grid>
                   <Grid item xs={10}>
-                    <Typography align="center">
+                    <Typography component="span" align="center">
                       {isNaN(winLossRatio) === false ? (
                         <Chip
                           color="info"
@@ -201,7 +201,7 @@ export default function Stats() {
                     </Typography>
                   </Grid>
                   <Grid item xs={10}>
-                    <Typography align="center">
+                    <Typography component="span" align="center">
                       <Chip
                         color="info"
                         sx={{
@@ -215,7 +215,7 @@ export default function Stats() {
                     </Typography>
                   </Grid>
                   <Grid item xs={10}>
-                    <Typography align="center">
+                    <Typography component="span" align="center">
                       <Chip
                         color="info"
                         sx={{
@@ -231,7 +231,7 @@ export default function Stats() {
                     </Typography>
                   </Grid>
                   <Grid item xs={10}>
-                    <Typography align="center">
+                    <Typography component="span" align="center">
                       <Chip
                         color="info"
                         sx={{
@@ -245,7 +245,7 @@ export default function Stats() {
                     </Typography>
                   </Grid>
                   <Grid item xs={10}>
-                    <Typography align="center">
+                    <Typography component="span" align="center">
                       <Chip
                         color="info"
                         sx={{
@@ -259,7 +259,7 @@ export default function Stats() {
                     </Typography>
                   </Grid>
                   <Grid item xs={10}>
-                    <Typography align="center">
+                    <Typography component="span" align="center">
                       <Chip
                         color="info"
                         sx={{

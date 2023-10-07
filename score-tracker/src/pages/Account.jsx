@@ -100,10 +100,10 @@ export default function Account() {
       {
         defaultNertsSettings: {
           gameType: "nerts",
-          team1Name: team1Name,
-          team1LinkedUsers: team1LinkedUsers,
-          team2Name: team2Name,
-          team2LinkedUsers: team2LinkedUsers,
+          team1Name: team1Name ? team1Name : '',
+          team1LinkedUsers: team1LinkedUsers !== undefined && team1LinkedUsers.length !== undefined && team1LinkedUsers.length > 0 ? team1LinkedUsers : [{displayName: '', docId: null, uid: null}],
+          team2Name: team2Name ? team2Name : '',
+          team2LinkedUsers: team2LinkedUsers !== undefined && team2LinkedUsers.length !== undefined && team2LinkedUsers.length > 0 ? team2LinkedUsers : [{displayName: '', docId: null, uid: null}],
         },
       }
     )

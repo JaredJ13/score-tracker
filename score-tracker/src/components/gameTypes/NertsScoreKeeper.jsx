@@ -1127,7 +1127,6 @@ export default function ScoreKeeper() {
               container
               justifyContent="center"
               direction="column-reverse"
-              xs={12}
               rowGap={2}
               mb={10}
             >

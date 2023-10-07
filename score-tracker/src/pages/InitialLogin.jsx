@@ -221,7 +221,7 @@ export default function InitialLogin() {
           maxWidth="false"
           sx={{
             backgroundColor: "#96aaf9",
-            height: "100%",
+            height: "100vh",
             pb: 4,
           }}
         >
@@ -397,7 +397,7 @@ export default function InitialLogin() {
               </Paper>
             </Grid>
           </Grid>
-          {firestoreError.error
+          {firestoreError.error === true
             ? renderAlert("error", firestoreError.message, setFirestoreError)
             : ""}
         </Container>
