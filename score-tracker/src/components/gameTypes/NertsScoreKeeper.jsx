@@ -51,7 +51,7 @@ export default function ScoreKeeper() {
   const [teams, setTeams] = useState([]);
   const [scoreHistory, setScoreHistory] = useState([]);
   const [currentRound, setCurrentRound] = useState(1);
-  const [chartData, setChartData] = useState([["Team", "Score"]]);
+  const [chartData, setChartData] = useState([["Team", "Score", { role: 'style' }]]);
   const [startMatchButtonDisabled, setStartMatchButtonDisabled] =
     useState(true);
   const [editScoreMode, setEditScoreMode] = useState(false);
@@ -121,6 +121,10 @@ export default function ScoreKeeper() {
     },
   };
 
+  const winningTeamChartColor = "#42b549";
+  const losingTeamChartColor = "#ea2626";
+  const tieGameChartColor = "#4cb1e0";
+
   const handleAddTeamModal = () => {
     setAddTeamModalOpen(!addTeamModalOpen);
   };
@@ -178,7 +182,7 @@ export default function ScoreKeeper() {
         setTeam1Error({ error: false, message: "" });
         setTeam2Error({ error: false, message: "" });
 
-        setChartData([...chartData, [addTeam1Name, 0], [addTeam2Name, 0]]);
+        setChartData([...chartData, [addTeam1Name, 0, tieGameChartColor], [addTeam2Name, 0, tieGameChartColor]]);
         setTeams([...teams, addTeam1Name, addTeam2Name]);
 
         // add team name to each linked user data
@@ -497,11 +501,31 @@ export default function ScoreKeeper() {
       let lastScoreTeamIndex1 =
         teamIndex1Scores[teamIndex1Scores.length - 1].teamScoreTotal;
 
-      setChartData([
-        ...chartData,
-        [teamForIndex0, lastScoreTeamIndex0],
-        [teamForIndex1, lastScoreTeamIndex1],
-      ]);
+      setTeam1CurrentTotalScore(lastScoreTeamIndex0)
+      setTeam2CurrentTotalScore(lastScoreTeamIndex1)
+
+      if (lastScoreTeamIndex0 > lastScoreTeamIndex1) {
+        setChartData([
+          ...chartData,
+          [teamForIndex0, lastScoreTeamIndex0, winningTeamChartColor],
+          [teamForIndex1, lastScoreTeamIndex1, losingTeamChartColor],
+        ]);
+      } else if (lastScoreTeamIndex0 < lastScoreTeamIndex1) {
+        setChartData([
+          ...chartData,
+          [teamForIndex0, lastScoreTeamIndex0, losingTeamChartColor],
+          [teamForIndex1, lastScoreTeamIndex1, winningTeamChartColor],
+        ]);
+      }
+      else {
+        setChartData([
+          ...chartData,
+          [teamForIndex0, lastScoreTeamIndex0, tieGameChartColor],
+          [teamForIndex1, lastScoreTeamIndex1, tieGameChartColor],
+        ]);
+      }
+
+
 
       // set current match id state
       setCurrentMatchIdState(continueMatchId);
@@ -667,7 +691,47 @@ export default function ScoreKeeper() {
         let scoreIndex = chartDataArray.findIndex(
           (element) => element[0] === teams[index]
         );
-        chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal]);
+
+        // use conditional to set appropiate bar chart colors
+        if (index === 0) {
+          // find opposite team 
+          let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[1])
+          let oppTeam = chartDataArray[oppTeamIndex];
+
+          if (newScoreTotal > team2CurrentTotalScore) {
+            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+            oppTeam[2] = losingTeamChartColor;
+          }
+          else if (newScoreTotal < team2CurrentTotalScore) {
+            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
+            oppTeam[2] = winningTeamChartColor;
+          }
+          else {
+            // they are tied so set both chart colors to blue
+            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
+            oppTeam[2] = tieGameChartColor;
+          }
+        }
+        else {
+          // find opposite team 
+          let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[0])
+          let oppTeam = chartDataArray[oppTeamIndex];
+
+          if (team1CurrentTotalScore > newScoreTotal) {
+            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
+            oppTeam[2] = winningTeamChartColor;
+          }
+          else if (team1CurrentTotalScore < newScoreTotal) {
+            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+            oppTeam[2] = losingTeamChartColor;
+          }
+          else {
+            // they are tied so set both chart colors to blue
+            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
+            oppTeam[2] = tieGameChartColor;
+          }
+        }
+
         setChartData(chartDataArray);
         // set score input state again to update google chart
         setScoreInput("");
@@ -736,10 +800,68 @@ export default function ScoreKeeper() {
         let scoreIndex = chartDataArray.findIndex(
           (element) => element[0] === teams[editScoreData.teamIndex]
         );
-        chartDataArray.splice(scoreIndex, 1, [
-          editScoreData.team,
-          newScoreTotal,
-        ]);
+
+        //  conditional to set chart colors
+        if (editScoreData.teamIndex === 0) {
+          setTeam1CurrentTotalScore(newScoreTotal)
+          // find opposite team 
+          let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[1])
+          let oppTeam = chartDataArray[oppTeamIndex];
+
+          if (newScoreTotal > team2CurrentTotalScore) {
+            chartDataArray.splice(scoreIndex, 1, [
+              editScoreData.team,
+              newScoreTotal,
+              winningTeamChartColor
+            ]);
+            oppTeam[2] = losingTeamChartColor
+          } else if (newScoreTotal < team2CurrentTotalScore) {
+            chartDataArray.splice(scoreIndex, 1, [
+              editScoreData.team,
+              newScoreTotal,
+              losingTeamChartColor
+            ]);
+            oppTeam[2] = winningTeamChartColor
+          }
+          else {
+            chartDataArray.splice(scoreIndex, 1, [
+              editScoreData.team,
+              newScoreTotal,
+              tieGameChartColor
+            ]);
+            oppTeam[2] = tieGameChartColor
+          }
+        }
+        else {
+          setTeam2CurrentTotalScore(newScoreTotal)
+          // find opposite team 
+          let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[0])
+          let oppTeam = chartDataArray[oppTeamIndex];
+
+          if (newScoreTotal > team1CurrentTotalScore) {
+            chartDataArray.splice(scoreIndex, 1, [
+              editScoreData.team,
+              newScoreTotal,
+              winningTeamChartColor
+            ]);
+            oppTeam[2] = losingTeamChartColor
+          } else if (newScoreTotal < team1CurrentTotalScore) {
+            chartDataArray.splice(scoreIndex, 1, [
+              editScoreData.team,
+              newScoreTotal,
+              losingTeamChartColor
+            ]);
+            oppTeam[2] = winningTeamChartColor
+          }
+          else {
+            chartDataArray.splice(scoreIndex, 1, [
+              editScoreData.team,
+              newScoreTotal,
+              tieGameChartColor
+            ]);
+            oppTeam[2] = tieGameChartColor
+          }
+        }
 
         setChartData(chartDataArray);
         // set score input state again to update google chart
@@ -751,7 +873,7 @@ export default function ScoreKeeper() {
         setEditScoreModalOpen();
       }
       setLoading(false);
-    }, 3000);
+    }, 2000);
   }, [editScoreMode]);
 
   // Check if all teams have scored once this round
@@ -1141,8 +1263,8 @@ export default function ScoreKeeper() {
                             score.scoreUpdate > 0
                               ? "#d0fef1"
                               : score.scoreUpdate === 0
-                              ? "#cbf2f8"
-                              : "#fcc5c5",
+                                ? "#cbf2f8"
+                                : "#fcc5c5",
                         }}
                       >
                         <CardContent>
