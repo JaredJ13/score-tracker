@@ -209,7 +209,7 @@ export default function NewGame() {
                       </InputLabel>
                       <Select
                         error={selectGameError.error}
-                        help
+                        help="true"
                         labelId="game-type-select-label"
                         value={gameType}
                         label="Game Type *"
@@ -253,58 +253,57 @@ export default function NewGame() {
                   pb={2}
                 >
                   {inProgressGames.length !== undefined &&
-                  inProgressGames.length > 0
-                    ? inProgressGames.map((game) => {
-                        return (
-                          <Grid item xs={10}>
-                            <Card
-                              key={game.matchId}
-                              sx={{ backgroundColor: "#96aaf9", color: "#fff" }}
-                            >
-                              <CardContent>
-                                <Grid container justifyContent="space-between">
-                                  <Grid item xs={8}>
-                                    <Typography
-                                      pt={1}
-                                      sx={{ width: "100%", fontSize: "12px" }}
-                                    >
-                                      {`${game.dateStarted
-                                        .toDate()
-                                        .toDateString()} | ${game.team1} vs ${
-                                        game.team2
+                    inProgressGames.length > 0
+                    ? inProgressGames.map((game, index) => {
+                      return (
+                        <Grid item xs={10} key={index}>
+                          <Card
+                            key={game.matchId}
+                            sx={{ backgroundColor: "#96aaf9", color: "#fff" }}
+                          >
+                            <CardContent>
+                              <Grid container justifyContent="space-between">
+                                <Grid item xs={8}>
+                                  <Typography
+                                    pt={1}
+                                    sx={{ width: "100%", fontSize: "12px" }}
+                                  >
+                                    {`${game.dateStarted
+                                      .toDate()
+                                      .toDateString()} | ${game.team1} vs ${game.team2
                                       }`}
-                                    </Typography>
-                                  </Grid>
-                                  <Grid item xs={4}>
-                                    <Grid container justifyContent="end">
-                                      <Grid item xs={4}>
-                                        <IconButton
-                                          onClick={() =>
-                                            handleDeleteMatch(game.matchId)
-                                          }
-                                          sx={{ width: "100%", color: "#fff" }}
-                                        >
-                                          <HighlightOffOutlinedIcon color="error" />
-                                        </IconButton>
-                                      </Grid>
-                                      <Grid item xs={4}>
-                                        <IconButton
-                                          onClick={() =>
-                                            handleContinueMatch(game.matchId)
-                                          }
-                                          sx={{ width: "100%", color: "#fff" }}
-                                        >
-                                          <PlayCircleOutlineOutlinedIcon />
-                                        </IconButton>
-                                      </Grid>
+                                  </Typography>
+                                </Grid>
+                                <Grid item xs={4}>
+                                  <Grid container justifyContent="end">
+                                    <Grid item xs={4}>
+                                      <IconButton
+                                        onClick={() =>
+                                          handleDeleteMatch(game.matchId)
+                                        }
+                                        sx={{ width: "100%", color: "#fff" }}
+                                      >
+                                        <HighlightOffOutlinedIcon color="error" />
+                                      </IconButton>
+                                    </Grid>
+                                    <Grid item xs={4}>
+                                      <IconButton
+                                        onClick={() =>
+                                          handleContinueMatch(game.matchId)
+                                        }
+                                        sx={{ width: "100%", color: "#fff" }}
+                                      >
+                                        <PlayCircleOutlineOutlinedIcon />
+                                      </IconButton>
                                     </Grid>
                                   </Grid>
                                 </Grid>
-                              </CardContent>
-                            </Card>
-                          </Grid>
-                        );
-                      })
+                              </Grid>
+                            </CardContent>
+                          </Card>
+                        </Grid>
+                      );
+                    })
                     : ""}
                 </Grid>
               </Paper>

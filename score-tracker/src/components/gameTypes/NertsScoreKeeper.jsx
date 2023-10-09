@@ -76,8 +76,8 @@ export default function ScoreKeeper() {
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
   const [addTeam2Name, setAddTeam2Name] = useState("");
-  const [scoreInput, setScoreInput] = useState(undefined);
-  const [scoreInput2, setScoreInput2] = useState(undefined);
+  const [scoreInput, setScoreInput] = useState('');
+  const [scoreInput2, setScoreInput2] = useState('');
   const [editScoreInput, setEditScoreInput] = useState(0);
   const [team1LinkedUsers, setTeam1LinkedUsers] = useState([]);
   const [team2LinkedUsers, setTeam2LinkedUsers] = useState([]);
@@ -189,7 +189,7 @@ export default function ScoreKeeper() {
         setTeam1Error({ error: false, message: "" });
         setTeam2Error({ error: false, message: "" });
 
-        setChartData([...chartData, [addTeam1Name, 0, tieGameChartColor], [addTeam2Name, 0, tieGameChartColor]]);
+        setChartData([...chartData, [addTeam1Name, 0, winningTeamChartColor], [addTeam2Name, 0, winningTeamChartColor]]);
         setTeams([...teams, addTeam1Name, addTeam2Name]);
 
         // add team name to each linked user data
@@ -382,9 +382,11 @@ export default function ScoreKeeper() {
     });
     // update users collection docs
     if (!tieGame) {
-      team1LinkedUsers.map((user) => {
-        // call update game involvement to all linked users function
-        updateLinkedUsersEndGame();
+      // update user matches completed
+      for (const user of team1LinkedUsers) {
+        batch.update(doc(db, "appUsers", user.docId), {
+          matchesCompleted: arrayUnion(currentMatchIdState),
+        });
         if (user.team === winningTeam) {
           if (losingScore < 62) {
             // skunked other team!
@@ -410,10 +412,13 @@ export default function ScoreKeeper() {
             });
           }
         }
-      });
-      team2LinkedUsers.map((user) => {
-        // call update game involvement to all linked users function
-        updateLinkedUsersEndGame();
+      }
+      for (const user of team2LinkedUsers) {
+        // update user matches completed
+        batch.update(doc(db, "appUsers", user.docId), {
+          matchesCompleted: arrayUnion(currentMatchIdState),
+        });
+
         if (user.team === winningTeam) {
           if (losingScore < 62) {
             // skunked other team!
@@ -439,8 +444,9 @@ export default function ScoreKeeper() {
             });
           }
         }
-      });
+      }
     }
+
     // now commit the batch write
     await batch
       .commit()
@@ -717,10 +723,15 @@ export default function ScoreKeeper() {
             chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
             oppTeam[2] = winningTeamChartColor;
           }
-          else {
+          else if (newScoreTotal === team2CurrentTotalScore) {
             // they are tied so set both chart colors to blue
             chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
             oppTeam[2] = tieGameChartColor;
+          }
+          else {
+            // first round score entry
+            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+            oppTeam[2] = losingTeamChartColor;
           }
         }
         else {
@@ -736,10 +747,15 @@ export default function ScoreKeeper() {
             chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
             oppTeam[2] = losingTeamChartColor;
           }
-          else {
+          else if (team1CurrentTotalScore === newScoreTotal) {
             // they are tied so set both chart colors to blue
             chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
             oppTeam[2] = tieGameChartColor;
+          }
+          else {
+            // first round score entry
+            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+            oppTeam[2] = losingTeamChartColor;
           }
         }
 
@@ -997,7 +1013,7 @@ export default function ScoreKeeper() {
                         sx={{ color: "#fff" }}
                       />
                     </Grid>
-                    {teams.map((team) => {
+                    {teams.map((team, index) => {
                       let scoreHistoryIndex = scoreHistory.findIndex(
                         (x) => x.team === team && x.round === currentRound
                       );
@@ -1007,7 +1023,7 @@ export default function ScoreKeeper() {
                         );
                       }
                       return (
-                        <Grid item>
+                        <Grid item key={index}>
                           <Chip
                             label={
                               scoreHistoryIndex !== -1
@@ -1067,7 +1083,7 @@ export default function ScoreKeeper() {
                     <Autocomplete
                       multiple
                       options={allUserDisplayNames}
-                      value={team1LinkedUsers || null}
+                      value={team1LinkedUsers || []}
                       isOptionEqualToValue={(option, value) =>
                         option.displayName === value.displayName
                       }
@@ -1105,7 +1121,7 @@ export default function ScoreKeeper() {
                     <Autocomplete
                       multiple
                       options={allUserDisplayNames}
-                      value={team2LinkedUsers || null}
+                      value={team2LinkedUsers || []}
                       isOptionEqualToValue={(option, value) =>
                         option.displayName === value.displayName
                       }
@@ -1263,9 +1279,9 @@ export default function ScoreKeeper() {
               rowGap={2}
               mb={10}
             >
-              {scoreHistory.map((score) => {
+              {scoreHistory.map((score, index) => {
                 return (
-                  <>
+                  <Box key={index}>
                     <Grid item>
                       <Card
                         square
@@ -1318,7 +1334,7 @@ export default function ScoreKeeper() {
                         </CardContent>
                       </Card>
                     </Grid>
-                  </>
+                  </Box>
                 );
               })}
             </Grid>
