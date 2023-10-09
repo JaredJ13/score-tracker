@@ -147,6 +147,9 @@ export default function ScoreKeeper() {
 
   const handleWinnerDialogModal = () => {
     setWinnerDialogModalOpen(!winnerDialogModalOpen);
+    if (confettiAnimation) {
+      setConfettiAnimation(false)
+    }
   };
 
   const handleAddNewTeam = async () => {
@@ -280,26 +283,6 @@ export default function ScoreKeeper() {
       },
     }).catch((err) => {
       console.log(err.message);
-    });
-  };
-
-  const updateLinkedUsersEndGame = async () => {
-    const batch = writeBatch(db);
-
-    team1LinkedUsers.map((user) => {
-      batch.update(doc(db, "appUsers", user.docId), {
-        matchesCompleted: arrayUnion(currentMatchIdState),
-      });
-    });
-    team2LinkedUsers.map((user) => {
-      batch.update(doc(db, "appUsers", user.docId), {
-        matchesCompleted: arrayUnion(currentMatchIdState),
-      });
-    });
-
-    // now commit the batch write
-    await batch.commit().catch((err) => {
-      console.log(err);
     });
   };
 
@@ -460,9 +443,6 @@ export default function ScoreKeeper() {
           message: `Win saved to database, all linked user${"'"}s stats updated.`,
         });
         setConfettiAnimation(true);
-        setTimeout(() => {
-          setConfettiAnimation(false);
-        }, [10000])
       })
       .catch((err) => {
         console.log(err);
@@ -554,15 +534,19 @@ export default function ScoreKeeper() {
         if (currentTeam == teamForIndex0) {
           // loop through teams array
           let arrayOfPlayers = continueMatchData.teamsInvolved[team];
+          let playersToAdd = [];
           arrayOfPlayers.map((player) => {
-            setTeam1LinkedUsers([...team1LinkedUsers, player]);
+            playersToAdd.push(player)
           });
+          setTeam1LinkedUsers(playersToAdd)
         } else if (currentTeam == teamForIndex1) {
           // loop through teams array
           let arrayOfPlayers = continueMatchData.teamsInvolved[team];
+          let playersToAdd = [];
           arrayOfPlayers.map((player) => {
-            setTeam2LinkedUsers([...team2LinkedUsers, player]);
+            playersToAdd.push(player)
           });
+          setTeam2LinkedUsers(playersToAdd);
         }
       }
     } else {
@@ -1412,14 +1396,14 @@ export default function ScoreKeeper() {
         {/* snackbar alert */}
         {alert.alert ? renderAlert(alert.type, alert.message, setAlert) : ""}
         {/* snackbar alert end */}
-        <Box sx={{ zIndex: 1000 }}>
-          {/* Confetti Animation */}
-          {confettiAnimation ? (
-            <ReactConfetti width={width} height={height} />
-          ) : ''}
-          {/* Confetti Animation End */}
-        </Box>
       </Container>
+      <Box sx={{ zIndex: 1000 }}>
+        {/* Confetti Animation */}
+        {confettiAnimation ? (
+          <ReactConfetti width={width} height={height} />
+        ) : ''}
+        {/* Confetti Animation End */}
+      </Box>
     </>
   );
 }
