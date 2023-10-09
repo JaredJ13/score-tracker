@@ -20,6 +20,7 @@ import {
   CircularProgress,
   DialogContentText,
   Autocomplete,
+  Box,
 } from "@mui/material";
 import MuiAlert from "@mui/material/Alert";
 import { Chart } from "react-google-charts";
@@ -37,8 +38,10 @@ import {
   addDoc,
   getDoc,
 } from "firebase/firestore";
-import { validateUserInput } from "../Validate";
+import ReactConfetti from 'react-confetti';
+import { useWindowSize } from "@uidotdev/usehooks";
 
+import { validateUserInput } from "../Validate";
 import { renderAlert } from "../Alerts";
 
 // icon imports
@@ -98,6 +101,10 @@ export default function ScoreKeeper() {
     message: "",
   });
   const [alert, setAlert] = useState({ alert: false, message: "", type: "" });
+
+  // confetti state/dimensions
+  const [confettiAnimation, setConfettiAnimation] = useState(false);
+  const { width, height } = useWindowSize();
 
   // get data from useNavigate initialize navigate
   const location = useLocation();
@@ -446,6 +453,10 @@ export default function ScoreKeeper() {
           alert: true,
           message: `Win saved to database, all linked user${"'"}s stats updated.`,
         });
+        setConfettiAnimation(true);
+        setTimeout(() => {
+          setConfettiAnimation(false);
+        }, [10000])
       })
       .catch((err) => {
         console.log(err);
@@ -1385,6 +1396,13 @@ export default function ScoreKeeper() {
         {/* snackbar alert */}
         {alert.alert ? renderAlert(alert.type, alert.message, setAlert) : ""}
         {/* snackbar alert end */}
+        <Box sx={{ zIndex: 1000 }}>
+          {/* Confetti Animation */}
+          {confettiAnimation ? (
+            <ReactConfetti width={width} height={height} />
+          ) : ''}
+          {/* Confetti Animation End */}
+        </Box>
       </Container>
     </>
   );

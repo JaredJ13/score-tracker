@@ -15,8 +15,10 @@
     "@mui/icons-material": "^5.14.3",
     "@mui/material": "^5.14.5",
     "@mui/x-charts": "^6.0.0-alpha.11",
+    "@uidotdev/usehooks": "^2.3.1",
     "firebase": "^10.3.1",
     "react": "^18.2.0",
+    "react-confetti": "^6.1.0",
     "react-dom": "^18.2.0",
     "react-google-charts": "^4.0.1",
     "react-router-dom": "^6.15.0"
