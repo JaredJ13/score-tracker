@@ -72,6 +72,8 @@ export default function ScoreKeeper() {
     useState(false);
   const [currentMatchIdState, setCurrentMatchIdState] = useState(null);
   const [gameSettings, setGameSettings] = useState(null);
+  const [inputScoreLoading, setInputScoreLoading] = useState(false)
+  const [inputScore2Loading, setInputScore2Loading] = useState(false)
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
@@ -571,6 +573,12 @@ export default function ScoreKeeper() {
   }, [gameSettings]);
 
   const handleAddPoints = async (team, index) => {
+    if (index === 0) {
+      setInputScoreLoading(true)
+    } else {
+      setInputScore2Loading(true)
+    }
+
     // validate user input
     let valid;
     if (index === 0) {
@@ -589,169 +597,187 @@ export default function ScoreKeeper() {
         if (error.type === "team2score") {
           setTeam2ScoreError({ error: true, message: error.message });
         }
+        // enable set score input button again
+        setInputScoreLoading(false)
+        setInputScore2Loading(false)
       });
     } else {
-      // add score to score history if score hasn't been added yet for the team this round
-      let teamValid = true;
-      scoreHistory.map((score) => {
-        if (score.team === team && score.round === currentRound) {
-          teamValid = false;
-        }
-      });
-      if (teamValid) {
-        let scoreItemNum = scoreHistory.length;
-        let newScoreTotal = 0;
-        // calc new score total
-        if (scoreHistory.length > 0 && scoreHistory.length !== undefined) {
-          scoreHistory.map((score) => {
-            if (score.team === team) {
-              newScoreTotal += score.scoreUpdate;
-            }
-          });
-          newScoreTotal +=
-            index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
-        } else {
-          newScoreTotal =
-            index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
-        }
-
-        if (scoreHistory.length === 1) {
-          // write score history to db's match doc
-          let updatedScoreHistory = [
-            ...scoreHistory,
-            {
-              team: team,
-              teamIndex: index,
-              scoreUpdate:
-                index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
-              scoreEntry: scoreItemNum,
-              teamScoreTotal: newScoreTotal,
-              round: currentRound,
-            },
-          ];
-          await writeNewMatch();
-          await writeTeamsInvolved();
-          // call update game involvement to all linked users function
-          await updateLinkedUsersStartGame();
-          setCurrentMatchIdState(currentMatchId);
-          await updateDoc(doc(db, "matches", `${currentMatchId}`), {
-            scoreHistory: updatedScoreHistory,
-          }).catch((err) => {
-            console.log(err.message);
-          });
-        } else if (scoreHistory.length > 2) {
-          // write score history to db's match doc
-          let updatedScoreHistory = [
-            ...scoreHistory,
-            {
-              team: team,
-              teamIndex: index,
-              scoreUpdate:
-                index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
-              scoreEntry: scoreItemNum,
-              teamScoreTotal: newScoreTotal,
-              round: currentRound,
-            },
-          ];
-          await updateDoc(doc(db, "matches", `${currentMatchIdState}`), {
-            scoreHistory: updatedScoreHistory,
-          }).catch((err) => {
-            console.log(err.message);
-          });
-        }
-
-        setScoreHistory([
-          ...scoreHistory,
-          {
-            team: team,
-            teamIndex: index,
-            scoreUpdate:
-              index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
-            scoreEntry: scoreItemNum,
-            teamScoreTotal: newScoreTotal,
-            round: currentRound,
-          },
-        ]);
-        // set total score state for specific team
-        if (index === 0) {
-          setTeam1CurrentTotalScore(newScoreTotal);
-        } else {
-          setTeam2CurrentTotalScore(newScoreTotal);
-        }
-
-        // set last score state
-        let opposingTeam = teams.find((x) => x !== team);
-        setLastScore({
-          team: team,
-          teamScoreTotal: newScoreTotal,
-          opposingTeam: opposingTeam,
-          round: currentRound,
+      setTimeout(async () => {
+        // add score to score history if score hasn't been added yet for the team this round
+        let teamValid = true;
+        scoreHistory.map((score) => {
+          if (score.team === team && score.round === currentRound) {
+            teamValid = false;
+          }
         });
-        // input current score into chart data
-        let chartDataArray = chartData;
-        let scoreIndex = chartDataArray.findIndex(
-          (element) => element[0] === teams[index]
-        );
-
-        // use conditional to set appropiate bar chart colors
-        if (index === 0) {
-          // find opposite team 
-          let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[1])
-          let oppTeam = chartDataArray[oppTeamIndex];
-
-          if (newScoreTotal > team2CurrentTotalScore) {
-            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
-            oppTeam[2] = losingTeamChartColor;
+        if (teamValid) {
+          let scoreItemNum = scoreHistory.length;
+          let newScoreTotal = 0;
+          // calc new score total
+          if (scoreHistory.length > 0 && scoreHistory.length !== undefined) {
+            scoreHistory.map((score) => {
+              if (score.team === team) {
+                newScoreTotal += score.scoreUpdate;
+              }
+            });
+            newScoreTotal +=
+              index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
+          } else {
+            newScoreTotal =
+              index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2);
           }
-          else if (newScoreTotal < team2CurrentTotalScore) {
-            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
-            oppTeam[2] = winningTeamChartColor;
+
+          if (scoreHistory.length === 1) {
+            // write score history to db's match doc
+            let updatedScoreHistory = [
+              ...scoreHistory,
+              {
+                team: team,
+                teamIndex: index,
+                scoreUpdate:
+                  index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+                scoreEntry: scoreItemNum,
+                teamScoreTotal: newScoreTotal,
+                round: currentRound,
+              },
+            ];
+            await writeNewMatch();
+            await writeTeamsInvolved();
+            // call update game involvement to all linked users function
+            await updateLinkedUsersStartGame();
+            setCurrentMatchIdState(currentMatchId);
+            await updateDoc(doc(db, "matches", `${currentMatchId}`), {
+              scoreHistory: updatedScoreHistory,
+            }).catch((err) => {
+              console.log(err.message);
+            });
+          } else {
+            // if both teams have scored this round then write score history, this is
+            // to prevent a bug where one person has a winning score and if you back out of game then continue it the next score will 
+            // trigger the win but it doesn't write to db properly
+
+            // so start by checking if scorehistory already has a score this round
+            const secondScoreThisRound = scoreHistory.filter((x) => x.round === currentRound)
+
+            if (secondScoreThisRound.length === 1) {
+              // this means both teams will have scored now this round so write to db
+              // write score history to db's match doc
+              let updatedScoreHistory = [
+                ...scoreHistory,
+                {
+                  team: team,
+                  teamIndex: index,
+                  scoreUpdate:
+                    index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+                  scoreEntry: scoreItemNum,
+                  teamScoreTotal: newScoreTotal,
+                  round: currentRound,
+                },
+              ];
+              await updateDoc(doc(db, "matches", `${currentMatchIdState}`), {
+                scoreHistory: updatedScoreHistory,
+              }).catch((err) => {
+                console.log(err.message);
+              });
+            }
           }
-          else if (newScoreTotal === team2CurrentTotalScore) {
-            // they are tied so set both chart colors to blue
-            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
-            oppTeam[2] = tieGameChartColor;
+
+          setScoreHistory([
+            ...scoreHistory,
+            {
+              team: team,
+              teamIndex: index,
+              scoreUpdate:
+                index === 0 ? parseInt(scoreInput) : parseInt(scoreInput2),
+              scoreEntry: scoreItemNum,
+              teamScoreTotal: newScoreTotal,
+              round: currentRound,
+            },
+          ]);
+          // set total score state for specific team
+          if (index === 0) {
+            setTeam1CurrentTotalScore(newScoreTotal);
+          } else {
+            setTeam2CurrentTotalScore(newScoreTotal);
+          }
+
+          // set last score state
+          let opposingTeam = teams.find((x) => x !== team);
+          setLastScore({
+            team: team,
+            teamScoreTotal: newScoreTotal,
+            opposingTeam: opposingTeam,
+            round: currentRound,
+          });
+          // input current score into chart data
+          let chartDataArray = chartData;
+          let scoreIndex = chartDataArray.findIndex(
+            (element) => element[0] === teams[index]
+          );
+
+          // use conditional to set appropiate bar chart colors
+          if (index === 0) {
+            // find opposite team 
+            let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[1])
+            let oppTeam = chartDataArray[oppTeamIndex];
+
+            if (newScoreTotal > team2CurrentTotalScore) {
+              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+              oppTeam[2] = losingTeamChartColor;
+            }
+            else if (newScoreTotal < team2CurrentTotalScore) {
+              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
+              oppTeam[2] = winningTeamChartColor;
+            }
+            else if (newScoreTotal === team2CurrentTotalScore) {
+              // they are tied so set both chart colors to blue
+              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
+              oppTeam[2] = tieGameChartColor;
+            }
+            else {
+              // first round score entry
+              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+              oppTeam[2] = losingTeamChartColor;
+            }
           }
           else {
-            // first round score entry
-            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
-            oppTeam[2] = losingTeamChartColor;
-          }
-        }
-        else {
-          // find opposite team 
-          let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[0])
-          let oppTeam = chartDataArray[oppTeamIndex];
+            // find opposite team 
+            let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[0])
+            let oppTeam = chartDataArray[oppTeamIndex];
 
-          if (team1CurrentTotalScore > newScoreTotal) {
-            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
-            oppTeam[2] = winningTeamChartColor;
+            if (team1CurrentTotalScore > newScoreTotal) {
+              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
+              oppTeam[2] = winningTeamChartColor;
+            }
+            else if (team1CurrentTotalScore < newScoreTotal) {
+              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+              oppTeam[2] = losingTeamChartColor;
+            }
+            else if (team1CurrentTotalScore === newScoreTotal) {
+              // they are tied so set both chart colors to blue
+              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
+              oppTeam[2] = tieGameChartColor;
+            }
+            else {
+              // first round score entry
+              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+              oppTeam[2] = losingTeamChartColor;
+            }
           }
-          else if (team1CurrentTotalScore < newScoreTotal) {
-            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
-            oppTeam[2] = losingTeamChartColor;
-          }
-          else if (team1CurrentTotalScore === newScoreTotal) {
-            // they are tied so set both chart colors to blue
-            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
-            oppTeam[2] = tieGameChartColor;
-          }
-          else {
-            // first round score entry
-            chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
-            oppTeam[2] = losingTeamChartColor;
-          }
-        }
 
-        setChartData(chartDataArray);
-        // set score input state again to update google chart
-        setScoreInput("");
-        setScoreInput2("");
-      } else {
-        handleSnackBarWarning();
-        setScoreInput("");
-        setScoreInput2("");
-      }
+          setChartData(chartDataArray);
+          // set score input state again to update google chart
+          setScoreInput("");
+          setScoreInput2("");
+        } else {
+          handleSnackBarWarning();
+          setScoreInput("");
+          setScoreInput2("");
+        }
+        // enable set score input button again
+        setInputScoreLoading(false)
+        setInputScore2Loading(false)
+      }, [1000])
     }
   };
 
@@ -989,14 +1015,11 @@ export default function ScoreKeeper() {
                     height="300px"
                     data={chartData}
                   />
-                  <Grid container justifyContent="space-around">
-                    <Grid item>
-                      <Chip
-                        label={`Round: ${currentRound}`}
-                        color="info"
-                        sx={{ color: "#fff" }}
-                      />
+                  <Grid container justifyContent="center">
+                    <Grid item xs={3}>
+                      <Typography sx={{ width: "100%", color: '#96aaf9', fontStyle: 'italic', position: 'relative', bottom: 25 }} color='info' align="center" variant="body1">RND {currentRound}</Typography>
                     </Grid>
+                    <Grid item xs={12}></Grid>
                     {teams.map((team, index) => {
                       let scoreHistoryIndex = scoreHistory.findIndex(
                         (x) => x.team === team && x.round === currentRound
@@ -1011,11 +1034,12 @@ export default function ScoreKeeper() {
                           <Chip
                             label={
                               scoreHistoryIndex !== -1
-                                ? `${team}'s Score: ${scoreHistory[scoreHistoryIndex].teamScoreTotal}`
-                                : `${team}'s Score: 0`
+                                ? <p>{team.toUpperCase()}: <span style={{ fontSize: '12px', color: '#f77d1a' }}>{scoreHistory[scoreHistoryIndex].teamScoreTotal}</span></p>
+                                : `${team.toUpperCase()}: 0`
                             }
-                            color="secondary"
-                            sx={{ color: "#fff" }}
+                            variant="outlined"
+                            color="info"
+                            sx={{ color: "#7581c5", fontSize: "10px", fontWeight: "regular", mx: 1 }}
                           />
                         </Grid>
                       );
@@ -1180,18 +1204,28 @@ export default function ScoreKeeper() {
                               disabled={disableAddPointRelatives}
                               value={scoreInput}
                               onChange={(e) => setScoreInput(e.target.value)}
+                              inputProps={{ style: { fontSize: '15px' } }}
+                            // InputLabelProps={{ style: { fontSize: '12px' } }} 
                             />
                           </Grid>
-                          <Grid item>
-                            <IconButton
+                          {!inputScoreLoading ? (
+                            <Grid item>
+                              <IconButton
+                                color="info"
+                                aria-label="add-score"
+                                disabled={disableAddPointRelatives}
+                                onClick={() => handleAddPoints(team, index)}
+                              >
+                                <AddIcon />
+                              </IconButton>
+                            </Grid>
+                          ) : (
+                            <CircularProgress
                               color="info"
-                              aria-label="add-score"
-                              disabled={disableAddPointRelatives}
-                              onClick={() => handleAddPoints(team, index)}
-                            >
-                              <AddIcon />
-                            </IconButton>
-                          </Grid>
+                              size={15}
+                              sx={{ padding: '8px' }}
+                            />
+                          )}
                         </Grid>
                       );
                     } else if (index === 1) {
@@ -1220,18 +1254,30 @@ export default function ScoreKeeper() {
                               disabled={disableAddPointRelatives}
                               value={scoreInput2}
                               onChange={(e) => setScoreInput2(e.target.value)}
+                              inputProps={{ style: { fontSize: '15px' } }}
+                            // InputLabelProps={{ style: { fontSize: '12px' } }} 
                             />
                           </Grid>
-                          <Grid item>
-                            <IconButton
-                              color="info"
-                              aria-label="add-score"
-                              disabled={disableAddPointRelatives}
-                              onClick={() => handleAddPoints(team, index)}
-                            >
-                              <AddIcon />
-                            </IconButton>
-                          </Grid>
+                          {!inputScore2Loading ? (
+                            <Grid item>
+                              <IconButton
+                                color="info"
+                                aria-label="add-score"
+                                disabled={disableAddPointRelatives}
+                                onClick={() => handleAddPoints(team, index)}
+                              >
+                                <AddIcon />
+                              </IconButton>
+                            </Grid>
+                          ) : (
+                            <Grid item>
+                              <CircularProgress
+                                color="info"
+                                size={15}
+                                sx={{ padding: '8px' }}
+                              />
+                            </Grid>
+                          )}
                         </Grid>
                       );
                     }

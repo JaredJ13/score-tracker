@@ -221,7 +221,7 @@ export default function InitialLogin() {
           maxWidth="false"
           sx={{
             backgroundColor: "#96aaf9",
-            height: "100vh",
+            minHeight: "100vh",
             pb: 4,
           }}
         >
