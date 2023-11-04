@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { DataGrid } from "@mui/x-data-grid";
 import {
   Container,
   Typography,
@@ -7,6 +9,7 @@ import {
   Box,
   TextField,
   Autocomplete,
+  Tooltip,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,7 +27,7 @@ import Layout from "../components/global/Layout";
 
 // icon imports
 import ExitToAppOutlinedIcon from "@mui/icons-material/ExitToAppOutlined";
-import { useEffect, useState } from "react";
+import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
 
 export default function Account() {
   // general state
@@ -38,13 +41,59 @@ export default function Account() {
   const [team1LinkedUsers, setTeam1LinkedUsers] = useState([]);
   const [team2LinkedUsers, setTeam2LinkedUsers] = useState([]);
 
+  // friends state
+  const [selectedFriend, setSelectedFriend] = useState(null);
+
   // initialize useNavigate
   const navigate = useNavigate();
+
+  // ---------- Data Grid Data ------------------------
+  const firendsDataColumns = [
+    { field: "id", headerName: "ID", flex: 1, maxWidth: 65 },
+    {
+      field: "username",
+      headerName: "Username",
+      flex: 1,
+    },
+  ];
+
+  const [friendsDataRows, setFriendsDataRows] = useState([
+    { id: 1, username: "test" },
+    { id: 2, username: "test" },
+    { id: 3, username: "test" },
+    { id: 4, username: "test" },
+    { id: 5, username: "test" },
+    { id: 6, username: "test" },
+    { id: 7, username: "test" },
+    { id: 8, username: "test" },
+    { id: 9, username: "test" },
+    { id: 10, username: "test" },
+    { id: 11, username: "test" },
+  ]);
+
+  const requestsDataColumns = [
+    { field: "id", headerName: "ID", flex: 1, maxWidth: 65 },
+    {
+      field: "fromUsername",
+      headerName: "Player Requesting",
+      flex: 1,
+    },
+  ];
+
+  const [requestsDataRows, setRequestsDataRows] = useState([
+    { id: 1, fromUsername: "test" },
+    { id: 2, fromUsername: "test" },
+    { id: 3, fromUsername: "test" },
+    { id: 4, fromUsername: "test" },
+    { id: 5, fromUsername: "test" },
+  ]);
 
   // ---------- INTIAL RENDER -------------------------
   useEffect(() => {
     // get all users for default teams user link selection
     getAllUsers();
+    // get all friends associated with current user
+    // getAllFriends();
     // get current user game settings
     getGameSettings();
   }, []);
@@ -100,10 +149,20 @@ export default function Account() {
       {
         defaultNertsSettings: {
           gameType: "nerts",
-          team1Name: team1Name ? team1Name : '',
-          team1LinkedUsers: team1LinkedUsers !== undefined && team1LinkedUsers.length !== undefined && team1LinkedUsers.length > 0 ? team1LinkedUsers : [{ displayName: '', docId: null, uid: null }],
-          team2Name: team2Name ? team2Name : '',
-          team2LinkedUsers: team2LinkedUsers !== undefined && team2LinkedUsers.length !== undefined && team2LinkedUsers.length > 0 ? team2LinkedUsers : [{ displayName: '', docId: null, uid: null }],
+          team1Name: team1Name ? team1Name : "",
+          team1LinkedUsers:
+            team1LinkedUsers !== undefined &&
+            team1LinkedUsers.length !== undefined &&
+            team1LinkedUsers.length > 0
+              ? team1LinkedUsers
+              : [{ displayName: "", docId: null, uid: null }],
+          team2Name: team2Name ? team2Name : "",
+          team2LinkedUsers:
+            team2LinkedUsers !== undefined &&
+            team2LinkedUsers.length !== undefined &&
+            team2LinkedUsers.length > 0
+              ? team2LinkedUsers
+              : [{ displayName: "", docId: null, uid: null }],
         },
       }
     )
@@ -175,18 +234,121 @@ export default function Account() {
           >
             Account
           </Typography>
-          {/* <Typography align="center" variant="h6">
-            *Page In Development*
-          </Typography> */}
         </Paper>
+
+        {/* Friends */}
         <Grid container justifyContent="center">
           <Grid item xs={12} sm={6} lg={4}>
             <Paper sx={{ my: 2, pb: 2 }}>
               <Grid container justifyContent="center" rowGap={3}>
-                <Grid item xs={12} my={2}>
+                <Grid item xs={11} my={2}>
+                  <Typography variant="h5" textAlign="center">
+                    Manage Friends
+                  </Typography>
+                </Grid>
+                <Grid item xs={1} my={2}>
+                  <Tooltip
+                    title={
+                      <p style={{ fontSize: "12px" }}>
+                        Manage your friends here. In order to add other players
+                        to a match, you must have eachother added as friends.
+                      </p>
+                    }
+                  >
+                    <HelpOutlineOutlinedIcon />
+                  </Tooltip>
+                </Grid>
+                <Grid item xs={10}>
+                  <Typography variant="body1" textAlign="start">
+                    My Friends
+                  </Typography>
+                </Grid>
+                <Grid item xs={10} sx={{ minHeight: "21.5rem" }}>
+                  <DataGrid
+                    rows={friendsDataRows}
+                    columns={firendsDataColumns}
+                    initialState={{
+                      pagination: {
+                        paginationModel: {
+                          pageSize: 2,
+                        },
+                      },
+                    }}
+                    pageSizeOptions={[2]}
+                  />
+                </Grid>
+                <Grid item xs={10}>
+                  <Typography variant="body1" textAlign="start">
+                    Send Friend Request
+                  </Typography>
+                </Grid>
+                <Grid item xs={8}>
+                  <Box component="form">
+                    <TextField
+                      id="send-friend-request"
+                      label="Player Username"
+                      type="text"
+                      fullWidth
+                      // value={team1Name}
+                      variant="outlined"
+                      // onChange={(e) => setTeam1Name(e.target.value)}
+                    />
+                  </Box>
+                </Grid>
+                <Grid item xs={2} alignSelf="center">
+                  <Button
+                    variant="text"
+                    color="secondary"
+                    sx={{ color: "#f77d1a" }}
+                  >
+                    Send
+                  </Button>
+                </Grid>
+                <Grid item xs={10}>
+                  <Typography variant="body1" textAlign="start">
+                    Friend Requests Received
+                  </Typography>
+                </Grid>
+                <Grid item xs={10} sx={{ minHeight: "21.5rem" }}>
+                  <DataGrid
+                    rows={requestsDataRows}
+                    columns={requestsDataColumns}
+                    initialState={{
+                      pagination: {
+                        paginationModel: {
+                          pageSize: 2,
+                        },
+                      },
+                    }}
+                    pageSizeOptions={[2]}
+                  />
+                </Grid>
+              </Grid>
+            </Paper>
+          </Grid>
+        </Grid>
+
+        {/* Set Game Settings */}
+        <Grid container justifyContent="center">
+          <Grid item xs={12} sm={6} lg={4}>
+            <Paper sx={{ my: 2, pb: 2 }}>
+              <Grid container justifyContent="center" rowGap={3}>
+                <Grid item xs={11} my={2}>
                   <Typography variant="h5" textAlign="center">
                     Set Default Game Settings
                   </Typography>
+                </Grid>
+                <Grid item xs={1} my={2}>
+                  <Tooltip
+                    title={
+                      <p style={{ fontSize: "12px" }}>
+                        Save your match settings here so that you can skip the
+                        match set up hassle and get right into it.
+                      </p>
+                    }
+                  >
+                    <HelpOutlineOutlinedIcon />
+                  </Tooltip>
                 </Grid>
                 <Grid item xs={10}>
                   <Box component="form">
