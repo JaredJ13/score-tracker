@@ -18,6 +18,7 @@ import {
   updateDoc,
   doc,
   getDoc,
+  setDoc,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/FirebaseConfig";
@@ -43,6 +44,7 @@ export default function Account() {
 
   // friends state
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [targetUsername, setTargetUsername] = useState("");
 
   // initialize useNavigate
   const navigate = useNavigate();
@@ -114,10 +116,25 @@ export default function Account() {
       .then((querySnapshot) => {
         let userArray = [];
         querySnapshot.forEach((doc) => {
+          let requests;
+          let friends;
+          if (doc.data().requests === undefined) {
+            requests = [];
+          } else {
+            requests = doc.data().requests;
+          }
+          if (doc.data().friends === undefined) {
+            friends = [];
+          } else {
+            friends = doc.data().friends;
+          }
+
           userArray.push({
             docId: doc.id,
             uid: doc.data().uid,
             displayName: doc.data().displayName,
+            requests: requests,
+            friends: friends,
           });
         });
         setAllUserDisplayNames([...userArray]);
@@ -125,6 +142,67 @@ export default function Account() {
       .catch((err) => {
         console.log(err);
       });
+  };
+
+  const sendFriendRequest = async () => {
+    const targetUserIndex = allUserDisplayNames.findIndex(
+      (x) => x.displayName.toUpperCase() === targetUsername.toUpperCase()
+    );
+    if (targetUserIndex !== -1) {
+      // check that the target user doesn't already have a friend request from user
+      let targetUser = allUserDisplayNames[targetUserIndex];
+      let existingRequest = targetUser.requests.find(
+        (x) =>
+          x.displayName.toUpperCase() ===
+          auth.currentUser.displayName.toUpperCase()
+      );
+
+      if (existingRequest === undefined) {
+        targetUser.requests.push({
+          displayName: auth.currentUser.displayName,
+          dateRequested: new Date(),
+        });
+        // write request to users collection
+        await updateDoc(doc(db, "appUsers", targetUser.docId), {
+          requests: targetUser.requests,
+        })
+          .then(() => {
+            // add it to local data so that the user can't send multiple
+            let allUsers = allUserDisplayNames;
+            allUsers.splice(targetUserIndex, 1);
+            allUsers.push(targetUser);
+            setAllUserDisplayNames(allUsers);
+
+            setTargetUsername("");
+
+            setAlert({
+              alert: true,
+              message: "Friend request sent!",
+              type: "success",
+            });
+          })
+          .catch(() => {
+            setAlert({
+              alert: true,
+              message: "Unable to send friend request, error: 1008",
+              type: "error",
+            });
+          });
+      } else {
+        setAlert({
+          alert: true,
+          message: "You already have a friend request pending for this user",
+          type: "error",
+        });
+      }
+    } else {
+      // target username does not exist
+      setAlert({
+        alert: true,
+        message: "That username does not exist",
+        type: "error",
+      });
+    }
   };
 
   const getGameSettings = async () => {
@@ -221,6 +299,11 @@ export default function Account() {
     updateDefaultTeams();
   };
 
+  const handleSendFriendRequest = async () => {
+    //  try to write friend request into specified users data
+    await sendFriendRequest();
+  };
+
   return (
     <Layout>
       <Container>
@@ -289,9 +372,9 @@ export default function Account() {
                       label="Player Username"
                       type="text"
                       fullWidth
-                      // value={team1Name}
+                      value={targetUsername}
                       variant="outlined"
-                      // onChange={(e) => setTeam1Name(e.target.value)}
+                      onChange={(e) => setTargetUsername(e.target.value)}
                     />
                   </Box>
                 </Grid>
@@ -300,6 +383,7 @@ export default function Account() {
                     variant="text"
                     color="secondary"
                     sx={{ color: "#f77d1a" }}
+                    onClick={() => handleSendFriendRequest()}
                   >
                     Send
                   </Button>
