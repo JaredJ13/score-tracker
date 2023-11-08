@@ -19,6 +19,7 @@ import {
   doc,
   getDoc,
   setDoc,
+  query,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
 import { auth, db } from "../firebase/FirebaseConfig";
@@ -45,9 +46,13 @@ export default function Account() {
   // friends state
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [targetUsername, setTargetUsername] = useState("");
+  const [userData, setUserData] = useState(null);
 
   // initialize useNavigate
   const navigate = useNavigate();
+
+  // currentUser
+  const currentUserDocID = localStorage.getItem("currentUserDocId");
 
   // ---------- Data Grid Data ------------------------
   const firendsDataColumns = [
@@ -74,10 +79,15 @@ export default function Account() {
   ]);
 
   const requestsDataColumns = [
-    { field: "id", headerName: "ID", flex: 1, maxWidth: 65 },
+    { field: "id", headerName: "ID", flex: 1 },
     {
       field: "fromUsername",
       headerName: "Player Requesting",
+      flex: 1,
+    },
+    {
+      field: "dateRequested",
+      headerName: "Date Received",
       flex: 1,
     },
   ];
@@ -96,6 +106,8 @@ export default function Account() {
     getAllUsers();
     // get all friends associated with current user
     // getAllFriends();
+    // get friend requests
+    getCurrentUserData();
     // get current user game settings
     getGameSettings();
   }, []);
@@ -143,6 +155,34 @@ export default function Account() {
         console.log(err);
       });
   };
+
+  const getCurrentUserData = async () => {
+    const querySnapshot = await getDoc(doc(db, "appUsers", currentUserDocID));
+
+    if (querySnapshot.exists()) {
+      setUserData(querySnapshot.data());
+    } else {
+      console.log("No requests available for the current user");
+    }
+  };
+
+  useEffect(() => {
+    // once we have our user's data set requests and friends
+    if (userData !== null && userData !== undefined) {
+      // set requests columns
+      if (userData.requests !== undefined && userData.requests.length >= 1) {
+        let requests = [];
+        userData.requests.forEach((request, index) => {
+          requests.push({
+            id: index,
+            fromUsername: request.displayName,
+            dateRequested: request.dateRequested.toDate(),
+          });
+        });
+        setRequestsDataRows(requests);
+      }
+    }
+  }, [userData]);
 
   const sendFriendRequest = async () => {
     const targetUserIndex = allUserDisplayNames.findIndex(
@@ -356,6 +396,12 @@ export default function Account() {
                           pageSize: 2,
                         },
                       },
+                      columns: {
+                        columnVisibilityModel: {
+                          status: false,
+                          id: false,
+                        },
+                      },
                     }}
                     pageSizeOptions={[2]}
                   />
@@ -401,6 +447,12 @@ export default function Account() {
                       pagination: {
                         paginationModel: {
                           pageSize: 2,
+                        },
+                      },
+                      columns: {
+                        columnVisibilityModel: {
+                          status: false,
+                          id: false,
                         },
                       },
                     }}
