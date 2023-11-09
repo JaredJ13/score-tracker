@@ -14,7 +14,13 @@ import { useEffect, useState } from "react";
 import Layout from "../components/global/Layout";
 
 export default function Stats() {
-  const [userData, setUserData] = useState({ wins: 0, losses: 0, skunkedOther: 0, beenSkunked: 0, tieGames: 0 });
+  const [userData, setUserData] = useState({
+    wins: 0,
+    losses: 0,
+    skunkedOther: 0,
+    beenSkunked: 0,
+    tieGames: 0,
+  });
   const [winLossRatio, setWinLossRatio] = useState(0);
   const [winRate, setWinRate] = useState(0);
   const [numGamesPlayed, setNumGamesPlayed] = useState(0);
@@ -31,6 +37,7 @@ export default function Stats() {
       querySnapshot.forEach((doc) => {
         setUserData(doc.data());
         localStorage.setItem("currentUserDocId", doc.id);
+        localStorage.setItem("currentUserDisplayName", doc.data().displayName);
       });
     });
   };
@@ -49,13 +56,13 @@ export default function Stats() {
       100;
     const numGames =
       userData.matchesCompleted !== undefined &&
-        userData.matchesCompleted !== null
+      userData.matchesCompleted !== null
         ? userData.matchesCompleted.length
         : 0;
     const userName =
       userData.displayName !== "" &&
-        userData.displayName !== null &&
-        userData.displayName !== undefined
+      userData.displayName !== null &&
+      userData.displayName !== undefined
         ? userData.displayName.toUpperCase()
         : "";
     if (wlRatio === Infinity && userData.wins > 0) {
@@ -112,7 +119,7 @@ export default function Stats() {
           "--ChartsLegend-rootSpacing": "-2px",
         }}
         height={300}
-      // width={200}
+        // width={200}
       />
     );
   };

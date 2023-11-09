@@ -229,7 +229,7 @@ export default function InitialLogin() {
             Point Tracker
           </Typography>
           <Typography align="center" variant="body2" sx={{ color: "#fff" }}>
-            V 1.0
+            V 1.1.0
           </Typography>
           <Grid container justifyContent="center">
             <Grid item xs={12} sm={6} lg={4}>
