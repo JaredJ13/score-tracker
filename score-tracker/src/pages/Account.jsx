@@ -10,6 +10,7 @@ import {
   TextField,
   Autocomplete,
   Tooltip,
+  IconButton,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -30,6 +31,9 @@ import Layout from "../components/global/Layout";
 // icon imports
 import ExitToAppOutlinedIcon from "@mui/icons-material/ExitToAppOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
+import DeleteForeverOutlinedIcon from "@mui/icons-material/DeleteForeverOutlined";
+import CheckCircleOutlineOutlinedIcon from "@mui/icons-material/CheckCircleOutlineOutlined";
+import DeleteForeverOutlined from "@mui/icons-material/DeleteForeverOutlined";
 
 export default function Account() {
   // general state
@@ -44,9 +48,13 @@ export default function Account() {
   const [team2LinkedUsers, setTeam2LinkedUsers] = useState([]);
 
   // friends state
-  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [selectedFriendRow, setSelectedFriendRow] = useState(null);
+  const [selectedRequestRow, setSelectedRequestRow] = useState(null);
   const [targetUsername, setTargetUsername] = useState("");
   const [userData, setUserData] = useState(null);
+  const [deleteRequestDisable, setDeleteRequestDisable] = useState(true);
+  const [acceptRequestDisable, setAcceptRequestDisable] = useState(true);
+  const [friendsToChooseFrom, setFriendsToChooseFrom] = useState([]);
 
   // initialize useNavigate
   const navigate = useNavigate();
@@ -56,30 +64,25 @@ export default function Account() {
 
   // ---------- Data Grid Data ------------------------
   const firendsDataColumns = [
-    { field: "id", headerName: "ID", flex: 1, maxWidth: 65 },
+    { field: "id", headerName: "Index", flex: 1 },
+    { field: "userDocId", headerName: "User Id", flex: 1 },
     {
-      field: "username",
+      field: "displayName",
       headerName: "Username",
+      flex: 1,
+    },
+    {
+      field: "dateAccepted",
+      headerName: "Date Accepted",
       flex: 1,
     },
   ];
 
-  const [friendsDataRows, setFriendsDataRows] = useState([
-    { id: 1, username: "test" },
-    { id: 2, username: "test" },
-    { id: 3, username: "test" },
-    { id: 4, username: "test" },
-    { id: 5, username: "test" },
-    { id: 6, username: "test" },
-    { id: 7, username: "test" },
-    { id: 8, username: "test" },
-    { id: 9, username: "test" },
-    { id: 10, username: "test" },
-    { id: 11, username: "test" },
-  ]);
+  const [friendsDataRows, setFriendsDataRows] = useState([]);
 
   const requestsDataColumns = [
-    { field: "id", headerName: "ID", flex: 1 },
+    { field: "id", headerName: "Index", flex: 1 },
+    { field: "userDocId", headerName: "User Id", flex: 1 },
     {
       field: "fromUsername",
       headerName: "Player Requesting",
@@ -92,13 +95,7 @@ export default function Account() {
     },
   ];
 
-  const [requestsDataRows, setRequestsDataRows] = useState([
-    { id: 1, fromUsername: "test" },
-    { id: 2, fromUsername: "test" },
-    { id: 3, fromUsername: "test" },
-    { id: 4, fromUsername: "test" },
-    { id: 5, fromUsername: "test" },
-  ]);
+  const [requestsDataRows, setRequestsDataRows] = useState([]);
 
   // ---------- INTIAL RENDER -------------------------
   useEffect(() => {
@@ -121,6 +118,55 @@ export default function Account() {
       setTeam2LinkedUsers(gameSettings.team2LinkedUsers);
     }
   }, [gameSettings]);
+
+  useEffect(() => {
+    if (selectedRequestRow !== null) {
+      setDeleteRequestDisable(false);
+      setAcceptRequestDisable(false);
+    } else {
+      setDeleteRequestDisable(true);
+      setAcceptRequestDisable(true);
+    }
+  }, [selectedRequestRow]);
+
+  useEffect(() => {
+    // once we have our user's data set requests and friends
+    if (userData !== null && userData !== undefined) {
+      // set requests columns
+      if (userData.requests !== undefined && userData.requests.length >= 1) {
+        let requests = [];
+        userData.requests.forEach((request, index) => {
+          requests.push({
+            id: index,
+            userDocId: request.userDocId,
+            fromUsername: request.displayName,
+            dateRequested: request.dateRequested.toDate(),
+          });
+        });
+        setRequestsDataRows(requests);
+      }
+
+      // set friend columns
+      if (userData.friends !== undefined && userData.friends.length >= 1) {
+        let friends = [];
+        let friendsToChooseFrom = [];
+        userData.friends.forEach((friend, index) => {
+          friendsToChooseFrom.push({
+            docId: friend.userDocId,
+            displayName: friend.displayName,
+          });
+          friends.push({
+            id: index,
+            userDocId: friend.userDocId,
+            displayName: friend.displayName,
+            dateAccepted: friend.dateAccepted.toDate(),
+          });
+        });
+        setFriendsDataRows(friends);
+        setFriendsToChooseFrom(friendsToChooseFrom);
+      }
+    }
+  }, [userData]);
 
   // ---------- DB FUNCTIONS (ASYNCHRONOUS DATABASE FUNCTIONS NEEDED IN USE EFFECT HOOKS)----------------
   const getAllUsers = async () => {
@@ -160,29 +206,13 @@ export default function Account() {
     const querySnapshot = await getDoc(doc(db, "appUsers", currentUserDocID));
 
     if (querySnapshot.exists()) {
+      let userData = querySnapshot.data();
+      userData["docId"] = querySnapshot.id;
       setUserData(querySnapshot.data());
     } else {
       console.log("No requests available for the current user");
     }
   };
-
-  useEffect(() => {
-    // once we have our user's data set requests and friends
-    if (userData !== null && userData !== undefined) {
-      // set requests columns
-      if (userData.requests !== undefined && userData.requests.length >= 1) {
-        let requests = [];
-        userData.requests.forEach((request, index) => {
-          requests.push({
-            id: index,
-            fromUsername: request.displayName,
-            dateRequested: request.dateRequested.toDate(),
-          });
-        });
-        setRequestsDataRows(requests);
-      }
-    }
-  }, [userData]);
 
   const sendFriendRequest = async () => {
     const targetUserIndex = allUserDisplayNames.findIndex(
@@ -201,6 +231,7 @@ export default function Account() {
         targetUser.requests.push({
           displayName: auth.currentUser.displayName,
           dateRequested: new Date(),
+          userDocId: currentUserDocID,
         });
         // write request to users collection
         await updateDoc(doc(db, "appUsers", targetUser.docId), {
@@ -296,6 +327,148 @@ export default function Account() {
       });
   };
 
+  const requestDbAction = async (actionType) => {
+    const targetUserIndex = allUserDisplayNames.findIndex(
+      (x) => x.docId === currentUserDocID
+    );
+    let targetUser = allUserDisplayNames[targetUserIndex];
+
+    if (actionType === "delete") {
+      let modifiedRequests = [];
+      if (targetUser.requests !== undefined) {
+        modifiedRequests = targetUser.requests;
+        let specificRequestIndex = modifiedRequests.findIndex(
+          (x) => x.fromUsername === selectedRequestRow.fromUsername
+        );
+        modifiedRequests.splice(specificRequestIndex, 1);
+      }
+
+      await updateDoc(doc(db, "appUsers", targetUser.docId), {
+        requests: modifiedRequests,
+      })
+        .then(() => {
+          // apply change locally
+          setRequestsDataRows(modifiedRequests);
+
+          setAlert({
+            alert: true,
+            message: "Request deleted",
+            type: "success",
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          setAlert({
+            alert: true,
+            message: "Request deletion failed",
+            type: "error",
+          });
+        });
+    } else if (actionType === "accept") {
+      let modifiedFriends = [];
+      let modifiedRequests = [];
+
+      // add to friends
+      if (targetUser.friends !== undefined) {
+        modifiedFriends = targetUser.friends;
+        modifiedFriends.push({
+          displayName: selectedRequestRow.fromUsername,
+          userDocId: selectedRequestRow.userDocId,
+          dateAccepted: new Date(),
+        });
+      } else {
+        modifiedFriends.push({
+          displayName: selectedRequestRow.fromUsername,
+          userDocId: selectedRequestRow.userDocId,
+          dateAccepted: new Date(),
+        });
+      }
+
+      // remove from requests
+      if (targetUser.requests !== undefined) {
+        modifiedRequests = targetUser.requests;
+        let specificRequestIndex = modifiedRequests.findIndex(
+          (x) => x.fromUsername === selectedRequestRow.fromUsername
+        );
+        modifiedRequests.splice(specificRequestIndex, 1);
+      }
+
+      await updateDoc(doc(db, "appUsers", targetUser.docId), {
+        friends: modifiedFriends,
+        requests: modifiedRequests,
+      })
+        .then(() => {
+          // apply change locally
+          modifiedRequests.map((request, index) => {
+            request["id"] = index;
+          });
+          modifiedFriends.map((friend, index) => {
+            friend["id"] = index;
+          });
+          setRequestsDataRows(modifiedRequests);
+          setFriendsDataRows(modifiedFriends);
+        })
+        .catch((err) => {
+          console.log(err);
+          setAlert({
+            alert: true,
+            message: "Friend request accept failed",
+            type: "error",
+          });
+        });
+
+      // get user data of user you are accepting as a friend
+      let newFriendData;
+      const querySnapshot = await getDoc(
+        doc(db, "appUsers", selectedRequestRow.userDocId)
+      );
+
+      if (querySnapshot.exists()) {
+        let userData = querySnapshot.data();
+        userData["docId"] = querySnapshot.id;
+        newFriendData = querySnapshot.data();
+      } else {
+        console.log("No user exists for this docId");
+      }
+
+      // now if we have the data lets add the current user to their friends list
+      if (newFriendData.friends !== undefined) {
+        newFriendData.friends.push({
+          displayName: userData.displayName,
+          dateAccepted: new Date(),
+          userDocId: currentUserDocID,
+        });
+      } else {
+        newFriendData["friends"] = [
+          {
+            displayName: userData.displayName,
+            dateAccepted: new Date(),
+            userDocId: currentUserDocID,
+          },
+        ];
+      }
+
+      await updateDoc(doc(db, "appUsers", selectedRequestRow.userDocId), {
+        friends: newFriendData.friends,
+      })
+        .then(() => {
+          setAlert({
+            alert: true,
+            message: "Friend request accepted",
+            type: "success",
+          });
+        })
+        .catch((err) => {
+          console.log(err);
+          setAlert({
+            alert: true,
+            message: "Friend request accept failed",
+            type: "error",
+          });
+        });
+    }
+  };
+
   // ---------- HANDLERS -------------------------------
   const handleSignOut = async () => {
     await signOut(auth)
@@ -314,11 +487,31 @@ export default function Account() {
     values.map((value) => {
       valueArray.push({
         docId: value.docId,
-        uid: value.uid,
         displayName: value.displayName,
       });
     });
     setTeam1LinkedUsers([...valueArray]);
+  };
+
+  const handleRowsSelection = (ids, dataGrid) => {
+    const selectedRowsData = ids.map((id) =>
+      requestsDataRows.find((row) => row.id === id)
+    );
+
+    // dataGrid parameter is used to decipher which datgrid to set the state for
+    if (selectedRowsData.length !== undefined && selectedRowsData.length >= 1) {
+      if (dataGrid === "requests") {
+        setSelectedRequestRow(...selectedRowsData);
+      } else if (dataGrid === "friends") {
+        setSelectedFriendRow(...selectedRowsData);
+      }
+    } else {
+      if (dataGrid === "requests") {
+        setSelectedRequestRow(null);
+      } else if (dataGrid === "friends") {
+        setSelectedFriendRow(null);
+      }
+    }
   };
 
   const handleTeam2LinkUsers = (event, values) => {
@@ -327,11 +520,19 @@ export default function Account() {
     values.map((value) => {
       valueArray.push({
         docId: value.docId,
-        uid: value.uid,
         displayName: value.displayName,
       });
     });
     setTeam2LinkedUsers([...valueArray]);
+  };
+
+  const handleRequestAction = async (actionType) => {
+    // actionType parameter specifies which button user pressed for selected request
+    if (actionType === "delete") {
+      await requestDbAction(actionType);
+    } else if (actionType === "accept") {
+      await requestDbAction(actionType);
+    }
   };
 
   const handleSetUserDefaults = async () => {
@@ -390,6 +591,7 @@ export default function Account() {
                   <DataGrid
                     rows={friendsDataRows}
                     columns={firendsDataColumns}
+                    localeText={{ noRowsLabel: "You Have No Friends :(" }}
                     initialState={{
                       pagination: {
                         paginationModel: {
@@ -400,6 +602,7 @@ export default function Account() {
                         columnVisibilityModel: {
                           status: false,
                           id: false,
+                          userDocId: false,
                         },
                       },
                     }}
@@ -434,15 +637,43 @@ export default function Account() {
                     Send
                   </Button>
                 </Grid>
-                <Grid item xs={10}>
+                <Grid item xs={8} alignSelf="center">
                   <Typography variant="body1" textAlign="start">
                     Friend Requests Received
                   </Typography>
+                </Grid>
+                <Grid item xs={1}>
+                  <IconButton
+                    disabled={deleteRequestDisable}
+                    onClick={() => handleRequestAction("delete")}
+                  >
+                    <DeleteForeverOutlined
+                      sx={{
+                        color: deleteRequestDisable ? "#7e7c7c" : "#d62822",
+                      }}
+                    />
+                  </IconButton>
+                </Grid>
+                <Grid item xs={1}>
+                  <IconButton
+                    disabled={acceptRequestDisable}
+                    onClick={() => handleRequestAction("accept")}
+                  >
+                    <CheckCircleOutlineOutlinedIcon
+                      sx={{
+                        color: acceptRequestDisable ? "#7e7c7c" : "#6dc972",
+                      }}
+                    />
+                  </IconButton>
                 </Grid>
                 <Grid item xs={10} sx={{ minHeight: "21.5rem" }}>
                   <DataGrid
                     rows={requestsDataRows}
                     columns={requestsDataColumns}
+                    onRowSelectionModelChange={(ids) =>
+                      handleRowsSelection(ids, "requests")
+                    }
+                    localeText={{ noRowsLabel: "No Pending Friend Requests" }}
                     initialState={{
                       pagination: {
                         paginationModel: {
@@ -453,6 +684,7 @@ export default function Account() {
                         columnVisibilityModel: {
                           status: false,
                           id: false,
+                          userDocId: false,
                         },
                       },
                     }}
@@ -502,7 +734,7 @@ export default function Account() {
                 <Grid item xs={10}>
                   <Autocomplete
                     multiple
-                    options={allUserDisplayNames}
+                    options={friendsToChooseFrom}
                     getOptionLabel={(option) => option.displayName}
                     value={team1LinkedUsers || []}
                     isOptionEqualToValue={(option, value) =>
@@ -536,7 +768,7 @@ export default function Account() {
                 <Grid item xs={10}>
                   <Autocomplete
                     multiple
-                    options={allUserDisplayNames}
+                    options={friendsToChooseFrom}
                     getOptionLabel={(option) => option.displayName}
                     value={team2LinkedUsers || []}
                     isOptionEqualToValue={(option, value) =>

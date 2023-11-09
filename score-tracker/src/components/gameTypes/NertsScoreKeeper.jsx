@@ -38,7 +38,7 @@ import {
   addDoc,
   getDoc,
 } from "firebase/firestore";
-import ReactConfetti from 'react-confetti';
+import ReactConfetti from "react-confetti";
 import { useWindowSize } from "@uidotdev/usehooks";
 
 import { validateUserInput } from "../Validate";
@@ -54,7 +54,9 @@ export default function ScoreKeeper() {
   const [teams, setTeams] = useState([]);
   const [scoreHistory, setScoreHistory] = useState([]);
   const [currentRound, setCurrentRound] = useState(1);
-  const [chartData, setChartData] = useState([["Team", "Score", { role: 'style' }]]);
+  const [chartData, setChartData] = useState([
+    ["Team", "Score", { role: "style" }],
+  ]);
   const [startMatchButtonDisabled, setStartMatchButtonDisabled] =
     useState(true);
   const [editScoreMode, setEditScoreMode] = useState(false);
@@ -72,14 +74,14 @@ export default function ScoreKeeper() {
     useState(false);
   const [currentMatchIdState, setCurrentMatchIdState] = useState(null);
   const [gameSettings, setGameSettings] = useState(null);
-  const [inputScoreLoading, setInputScoreLoading] = useState(false)
-  const [inputScore2Loading, setInputScore2Loading] = useState(false)
+  const [inputScoreLoading, setInputScoreLoading] = useState(false);
+  const [inputScore2Loading, setInputScore2Loading] = useState(false);
 
   // input state
   const [addTeam1Name, setAddTeam1Name] = useState("");
   const [addTeam2Name, setAddTeam2Name] = useState("");
-  const [scoreInput, setScoreInput] = useState('');
-  const [scoreInput2, setScoreInput2] = useState('');
+  const [scoreInput, setScoreInput] = useState("");
+  const [scoreInput2, setScoreInput2] = useState("");
   const [editScoreInput, setEditScoreInput] = useState(0);
   const [team1LinkedUsers, setTeam1LinkedUsers] = useState([]);
   const [team2LinkedUsers, setTeam2LinkedUsers] = useState([]);
@@ -150,7 +152,7 @@ export default function ScoreKeeper() {
   const handleWinnerDialogModal = () => {
     setWinnerDialogModalOpen(!winnerDialogModalOpen);
     if (confettiAnimation) {
-      setConfettiAnimation(false)
+      setConfettiAnimation(false);
     }
   };
 
@@ -194,7 +196,11 @@ export default function ScoreKeeper() {
         setTeam1Error({ error: false, message: "" });
         setTeam2Error({ error: false, message: "" });
 
-        setChartData([...chartData, [addTeam1Name, 0, winningTeamChartColor], [addTeam2Name, 0, winningTeamChartColor]]);
+        setChartData([
+          ...chartData,
+          [addTeam1Name, 0, winningTeamChartColor],
+          [addTeam2Name, 0, winningTeamChartColor],
+        ]);
         setTeams([...teams, addTeam1Name, addTeam2Name]);
 
         // add team name to each linked user data
@@ -224,7 +230,7 @@ export default function ScoreKeeper() {
     let valueArray = [];
     values.map((value) => {
       valueArray.push({
-        uid: value.uid,
+        // uid: value.uid,
         displayName: value.displayName,
         docId: value.docId,
       });
@@ -237,7 +243,7 @@ export default function ScoreKeeper() {
     let valueArray = [];
     values.map((value) => {
       valueArray.push({
-        uid: value.uid,
+        // uid: value.uid,
         displayName: value.displayName,
         docId: value.docId,
       });
@@ -249,12 +255,20 @@ export default function ScoreKeeper() {
   const getAllUsers = async () => {
     await getDocs(collection(db, "appUsers")).then((querySnapshot) => {
       let userArray = [];
+      let currentUserId = localStorage.getItem("currentUserDocId");
       querySnapshot.forEach((doc) => {
-        userArray.push({
-          docId: doc.id,
-          uid: doc.data().uid,
-          displayName: doc.data().displayName,
-        });
+        if (doc.id === currentUserId) {
+          if (doc.data().friends !== undefined) {
+            doc.data().friends.forEach((friend) => {
+              userArray.push({
+                docId: friend.userDocId,
+                displayName: friend.displayName,
+              });
+            });
+          }
+        } else {
+          console.log("no friends yet :(");
+        }
       });
       setAllUserDisplayNames([...userArray]);
     });
@@ -500,8 +514,8 @@ export default function ScoreKeeper() {
       let lastScoreTeamIndex1 =
         teamIndex1Scores[teamIndex1Scores.length - 1].teamScoreTotal;
 
-      setTeam1CurrentTotalScore(lastScoreTeamIndex0)
-      setTeam2CurrentTotalScore(lastScoreTeamIndex1)
+      setTeam1CurrentTotalScore(lastScoreTeamIndex0);
+      setTeam2CurrentTotalScore(lastScoreTeamIndex1);
 
       if (lastScoreTeamIndex0 > lastScoreTeamIndex1) {
         setChartData([
@@ -515,16 +529,13 @@ export default function ScoreKeeper() {
           [teamForIndex0, lastScoreTeamIndex0, losingTeamChartColor],
           [teamForIndex1, lastScoreTeamIndex1, winningTeamChartColor],
         ]);
-      }
-      else {
+      } else {
         setChartData([
           ...chartData,
           [teamForIndex0, lastScoreTeamIndex0, tieGameChartColor],
           [teamForIndex1, lastScoreTeamIndex1, tieGameChartColor],
         ]);
       }
-
-
 
       // set current match id state
       setCurrentMatchIdState(continueMatchId);
@@ -538,15 +549,15 @@ export default function ScoreKeeper() {
           let arrayOfPlayers = continueMatchData.teamsInvolved[team];
           let playersToAdd = [];
           arrayOfPlayers.map((player) => {
-            playersToAdd.push(player)
+            playersToAdd.push(player);
           });
-          setTeam1LinkedUsers(playersToAdd)
+          setTeam1LinkedUsers(playersToAdd);
         } else if (currentTeam == teamForIndex1) {
           // loop through teams array
           let arrayOfPlayers = continueMatchData.teamsInvolved[team];
           let playersToAdd = [];
           arrayOfPlayers.map((player) => {
-            playersToAdd.push(player)
+            playersToAdd.push(player);
           });
           setTeam2LinkedUsers(playersToAdd);
         }
@@ -574,9 +585,9 @@ export default function ScoreKeeper() {
 
   const handleAddPoints = async (team, index) => {
     if (index === 0) {
-      setInputScoreLoading(true)
+      setInputScoreLoading(true);
     } else {
-      setInputScore2Loading(true)
+      setInputScore2Loading(true);
     }
 
     // validate user input
@@ -598,8 +609,8 @@ export default function ScoreKeeper() {
           setTeam2ScoreError({ error: true, message: error.message });
         }
         // enable set score input button again
-        setInputScoreLoading(false)
-        setInputScore2Loading(false)
+        setInputScoreLoading(false);
+        setInputScore2Loading(false);
       });
     } else {
       setTimeout(async () => {
@@ -653,11 +664,13 @@ export default function ScoreKeeper() {
             });
           } else {
             // if both teams have scored this round then write score history, this is
-            // to prevent a bug where one person has a winning score and if you back out of game then continue it the next score will 
+            // to prevent a bug where one person has a winning score and if you back out of game then continue it the next score will
             // trigger the win but it doesn't write to db properly
 
             // so start by checking if scorehistory already has a score this round
-            const secondScoreThisRound = scoreHistory.filter((x) => x.round === currentRound)
+            const secondScoreThisRound = scoreHistory.filter(
+              (x) => x.round === currentRound
+            );
 
             if (secondScoreThisRound.length === 1) {
               // this means both teams will have scored now this round so write to db
@@ -717,50 +730,79 @@ export default function ScoreKeeper() {
 
           // use conditional to set appropiate bar chart colors
           if (index === 0) {
-            // find opposite team 
-            let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[1])
+            // find opposite team
+            let oppTeamIndex = chartDataArray.findIndex(
+              (element) => element[0] === teams[1]
+            );
             let oppTeam = chartDataArray[oppTeamIndex];
 
             if (newScoreTotal > team2CurrentTotalScore) {
-              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+              chartDataArray.splice(scoreIndex, 1, [
+                team,
+                newScoreTotal,
+                winningTeamChartColor,
+              ]);
               oppTeam[2] = losingTeamChartColor;
-            }
-            else if (newScoreTotal < team2CurrentTotalScore) {
-              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
+            } else if (newScoreTotal < team2CurrentTotalScore) {
+              chartDataArray.splice(scoreIndex, 1, [
+                team,
+                newScoreTotal,
+                losingTeamChartColor,
+              ]);
               oppTeam[2] = winningTeamChartColor;
-            }
-            else if (newScoreTotal === team2CurrentTotalScore) {
+            } else if (newScoreTotal === team2CurrentTotalScore) {
               // they are tied so set both chart colors to blue
-              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
+              chartDataArray.splice(scoreIndex, 1, [
+                team,
+                newScoreTotal,
+                tieGameChartColor,
+              ]);
               oppTeam[2] = tieGameChartColor;
-            }
-            else {
+            } else {
               // first round score entry
-              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+              chartDataArray.splice(scoreIndex, 1, [
+                team,
+                newScoreTotal,
+                winningTeamChartColor,
+              ]);
               oppTeam[2] = losingTeamChartColor;
             }
-          }
-          else {
-            // find opposite team 
-            let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[0])
+          } else {
+            // find opposite team
+            let oppTeamIndex = chartDataArray.findIndex(
+              (element) => element[0] === teams[0]
+            );
             let oppTeam = chartDataArray[oppTeamIndex];
 
             if (team1CurrentTotalScore > newScoreTotal) {
-              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, losingTeamChartColor]);
+              chartDataArray.splice(scoreIndex, 1, [
+                team,
+                newScoreTotal,
+                losingTeamChartColor,
+              ]);
               oppTeam[2] = winningTeamChartColor;
-            }
-            else if (team1CurrentTotalScore < newScoreTotal) {
-              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+            } else if (team1CurrentTotalScore < newScoreTotal) {
+              chartDataArray.splice(scoreIndex, 1, [
+                team,
+                newScoreTotal,
+                winningTeamChartColor,
+              ]);
               oppTeam[2] = losingTeamChartColor;
-            }
-            else if (team1CurrentTotalScore === newScoreTotal) {
+            } else if (team1CurrentTotalScore === newScoreTotal) {
               // they are tied so set both chart colors to blue
-              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, tieGameChartColor]);
+              chartDataArray.splice(scoreIndex, 1, [
+                team,
+                newScoreTotal,
+                tieGameChartColor,
+              ]);
               oppTeam[2] = tieGameChartColor;
-            }
-            else {
+            } else {
               // first round score entry
-              chartDataArray.splice(scoreIndex, 1, [team, newScoreTotal, winningTeamChartColor]);
+              chartDataArray.splice(scoreIndex, 1, [
+                team,
+                newScoreTotal,
+                winningTeamChartColor,
+              ]);
               oppTeam[2] = losingTeamChartColor;
             }
           }
@@ -775,9 +817,9 @@ export default function ScoreKeeper() {
           setScoreInput2("");
         }
         // enable set score input button again
-        setInputScoreLoading(false)
-        setInputScore2Loading(false)
-      }, [1000])
+        setInputScoreLoading(false);
+        setInputScore2Loading(false);
+      }, [1000]);
     }
   };
 
@@ -840,63 +882,64 @@ export default function ScoreKeeper() {
 
         //  conditional to set chart colors
         if (editScoreData.teamIndex === 0) {
-          setTeam1CurrentTotalScore(newScoreTotal)
-          // find opposite team 
-          let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[1])
+          setTeam1CurrentTotalScore(newScoreTotal);
+          // find opposite team
+          let oppTeamIndex = chartDataArray.findIndex(
+            (element) => element[0] === teams[1]
+          );
           let oppTeam = chartDataArray[oppTeamIndex];
 
           if (newScoreTotal > team2CurrentTotalScore) {
             chartDataArray.splice(scoreIndex, 1, [
               editScoreData.team,
               newScoreTotal,
-              winningTeamChartColor
+              winningTeamChartColor,
             ]);
-            oppTeam[2] = losingTeamChartColor
+            oppTeam[2] = losingTeamChartColor;
           } else if (newScoreTotal < team2CurrentTotalScore) {
             chartDataArray.splice(scoreIndex, 1, [
               editScoreData.team,
               newScoreTotal,
-              losingTeamChartColor
+              losingTeamChartColor,
             ]);
-            oppTeam[2] = winningTeamChartColor
-          }
-          else {
+            oppTeam[2] = winningTeamChartColor;
+          } else {
             chartDataArray.splice(scoreIndex, 1, [
               editScoreData.team,
               newScoreTotal,
-              tieGameChartColor
+              tieGameChartColor,
             ]);
-            oppTeam[2] = tieGameChartColor
+            oppTeam[2] = tieGameChartColor;
           }
-        }
-        else {
-          setTeam2CurrentTotalScore(newScoreTotal)
-          // find opposite team 
-          let oppTeamIndex = chartDataArray.findIndex((element) => element[0] === teams[0])
+        } else {
+          setTeam2CurrentTotalScore(newScoreTotal);
+          // find opposite team
+          let oppTeamIndex = chartDataArray.findIndex(
+            (element) => element[0] === teams[0]
+          );
           let oppTeam = chartDataArray[oppTeamIndex];
 
           if (newScoreTotal > team1CurrentTotalScore) {
             chartDataArray.splice(scoreIndex, 1, [
               editScoreData.team,
               newScoreTotal,
-              winningTeamChartColor
+              winningTeamChartColor,
             ]);
-            oppTeam[2] = losingTeamChartColor
+            oppTeam[2] = losingTeamChartColor;
           } else if (newScoreTotal < team1CurrentTotalScore) {
             chartDataArray.splice(scoreIndex, 1, [
               editScoreData.team,
               newScoreTotal,
-              losingTeamChartColor
+              losingTeamChartColor,
             ]);
-            oppTeam[2] = winningTeamChartColor
-          }
-          else {
+            oppTeam[2] = winningTeamChartColor;
+          } else {
             chartDataArray.splice(scoreIndex, 1, [
               editScoreData.team,
               newScoreTotal,
-              tieGameChartColor
+              tieGameChartColor,
             ]);
-            oppTeam[2] = tieGameChartColor
+            oppTeam[2] = tieGameChartColor;
           }
         }
 
@@ -1017,7 +1060,20 @@ export default function ScoreKeeper() {
                   />
                   <Grid container justifyContent="center">
                     <Grid item xs={3}>
-                      <Typography sx={{ width: "100%", color: '#96aaf9', fontStyle: 'italic', position: 'relative', bottom: 25 }} color='info' align="center" variant="body1">RND {currentRound}</Typography>
+                      <Typography
+                        sx={{
+                          width: "100%",
+                          color: "#96aaf9",
+                          fontStyle: "italic",
+                          position: "relative",
+                          bottom: 25,
+                        }}
+                        color="info"
+                        align="center"
+                        variant="body1"
+                      >
+                        RND {currentRound}
+                      </Typography>
                     </Grid>
                     <Grid item xs={12}></Grid>
                     {teams.map((team, index) => {
@@ -1033,13 +1089,33 @@ export default function ScoreKeeper() {
                         <Grid item key={index}>
                           <Chip
                             label={
-                              scoreHistoryIndex !== -1
-                                ? <p>{team.toUpperCase()}: <span style={{ fontSize: '12px', color: '#f77d1a' }}>{scoreHistory[scoreHistoryIndex].teamScoreTotal}</span></p>
-                                : `${team.toUpperCase()}: 0`
+                              scoreHistoryIndex !== -1 ? (
+                                <p>
+                                  {team.toUpperCase()}:{" "}
+                                  <span
+                                    style={{
+                                      fontSize: "12px",
+                                      color: "#f77d1a",
+                                    }}
+                                  >
+                                    {
+                                      scoreHistory[scoreHistoryIndex]
+                                        .teamScoreTotal
+                                    }
+                                  </span>
+                                </p>
+                              ) : (
+                                `${team.toUpperCase()}: 0`
+                              )
                             }
                             variant="outlined"
                             color="info"
-                            sx={{ color: "#7581c5", fontSize: "10px", fontWeight: "regular", mx: 1 }}
+                            sx={{
+                              color: "#7581c5",
+                              fontSize: "10px",
+                              fontWeight: "regular",
+                              mx: 1,
+                            }}
                           />
                         </Grid>
                       );
@@ -1204,8 +1280,8 @@ export default function ScoreKeeper() {
                               disabled={disableAddPointRelatives}
                               value={scoreInput}
                               onChange={(e) => setScoreInput(e.target.value)}
-                              inputProps={{ style: { fontSize: '15px' } }}
-                            // InputLabelProps={{ style: { fontSize: '12px' } }} 
+                              inputProps={{ style: { fontSize: "15px" } }}
+                              // InputLabelProps={{ style: { fontSize: '12px' } }}
                             />
                           </Grid>
                           {!inputScoreLoading ? (
@@ -1223,7 +1299,7 @@ export default function ScoreKeeper() {
                             <CircularProgress
                               color="info"
                               size={15}
-                              sx={{ padding: '8px' }}
+                              sx={{ padding: "8px" }}
                             />
                           )}
                         </Grid>
@@ -1254,8 +1330,8 @@ export default function ScoreKeeper() {
                               disabled={disableAddPointRelatives}
                               value={scoreInput2}
                               onChange={(e) => setScoreInput2(e.target.value)}
-                              inputProps={{ style: { fontSize: '15px' } }}
-                            // InputLabelProps={{ style: { fontSize: '12px' } }} 
+                              inputProps={{ style: { fontSize: "15px" } }}
+                              // InputLabelProps={{ style: { fontSize: '12px' } }}
                             />
                           </Grid>
                           {!inputScore2Loading ? (
@@ -1274,7 +1350,7 @@ export default function ScoreKeeper() {
                               <CircularProgress
                                 color="info"
                                 size={15}
-                                sx={{ padding: '8px' }}
+                                sx={{ padding: "8px" }}
                               />
                             </Grid>
                           )}
@@ -1320,8 +1396,8 @@ export default function ScoreKeeper() {
                             score.scoreUpdate > 0
                               ? "#d0fef1"
                               : score.scoreUpdate === 0
-                                ? "#cbf2f8"
-                                : "#fcc5c5",
+                              ? "#cbf2f8"
+                              : "#fcc5c5",
                         }}
                       >
                         <CardContent>
@@ -1447,7 +1523,9 @@ export default function ScoreKeeper() {
         {/* Confetti Animation */}
         {confettiAnimation ? (
           <ReactConfetti width={width} height={height} />
-        ) : ''}
+        ) : (
+          ""
+        )}
         {/* Confetti Animation End */}
       </Box>
     </>
