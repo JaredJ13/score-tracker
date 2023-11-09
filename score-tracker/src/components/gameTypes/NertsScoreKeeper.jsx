@@ -270,6 +270,10 @@ export default function ScoreKeeper() {
           console.log("no friends yet :(");
         }
       });
+      userArray.push({
+        docId: currentUserId,
+        displayName: localStorage.getItem("currentUserDisplayName"),
+      });
       setAllUserDisplayNames([...userArray]);
     });
   };

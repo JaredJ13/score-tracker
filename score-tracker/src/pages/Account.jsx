@@ -163,6 +163,10 @@ export default function Account() {
           });
         });
         setFriendsDataRows(friends);
+        friendsToChooseFrom.push({
+          docId: currentUserDocID,
+          displayName: userData.displayName,
+        });
         setFriendsToChooseFrom(friendsToChooseFrom);
       }
     }
